@@ -5,6 +5,7 @@
   "author": "Binary MLM",
   "private": true,
   "sideEffects": false,
+  "type": "module",
   "main": "electron/main.js",
   "build": {
     "appId": "com.binarymlm.user",
