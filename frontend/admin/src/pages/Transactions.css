@@ -1,0 +1,159 @@
+.transactions-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.summary-card {
+  padding: 16px;
+  gap: 12px;
+}
+
+.summary-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blue-light {
+  background-color: rgba(67, 24, 255, 0.1);
+  color: var(--color-primary);
+}
+
+.red-light {
+  background-color: rgba(238, 93, 80, 0.1);
+  color: var(--color-danger);
+}
+
+.summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  text-transform: uppercase;
+}
+
+.summary-value {
+  font-size: 1.5rem;
+}
+
+.summary-trend {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.transactions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transactions-header h2 {
+  font-size: 1.25rem;
+}
+
+.icon-btn-small {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s;
+}
+
+.icon-btn-small:hover {
+  background-color: var(--color-bg);
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transaction-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  gap: 16px;
+}
+
+.tx-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-danger-light {
+  background-color: rgba(238, 93, 80, 0.1);
+}
+
+.bg-primary-light {
+  background-color: rgba(67, 24, 255, 0.1);
+}
+
+.tx-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tx-details h4 {
+  font-size: 0.9rem;
+}
+
+.tx-details p {
+  font-size: 0.75rem;
+}
+
+.tx-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tx-date {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.tx-amount-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.tx-amount {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.tx-amount-status .badge {
+  font-size: 0.65rem;
+}
