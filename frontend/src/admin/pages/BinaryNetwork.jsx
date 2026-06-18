@@ -90,6 +90,9 @@ const BinaryNode = ({ user, isRoot = false }) => {
       <p style={{ fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginTop: '4px', backgroundColor: 'var(--color-bg)', padding: '2px 8px', borderRadius: '6px', fontWeight: 500, margin: '4px 0 0 0' }}>
         ID: {user.id}
       </p>
+      <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold', marginTop: '4px', margin: '4px 0 0 0' }}>
+        Vol: ₹{(user.volume || 0).toLocaleString()}
+      </p>
       
       {!isRoot && user.side && (
         <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -201,6 +204,13 @@ const BinaryNetwork = () => {
           </div>
           <p className="stat-label">Right Business Vol</p>
           <h2 className="stat-value text-danger">₹{rightStats.volume.toLocaleString()}</h2>
+        </div>
+        <div className="stat-card card">
+          <div className="stat-header">
+            <div className="stat-icon purple-light"><Activity size={20} /></div>
+          </div>
+          <p className="stat-label">Matching Vol (Weaker Leg)</p>
+          <h2 className="stat-value" style={{ color: '#5B3DF5' }}>₹{Math.min(leftStats.volume, rightStats.volume).toLocaleString()}</h2>
         </div>
       </div>
 

@@ -210,25 +210,54 @@ const getNetwork = async (req, res) => {
 
 const updatePlacement = async (req, res) => {
   const { id } = req.params;
-  const { placement, sponsorId } = req.body;
+  const { placement, parentId, sponsorId } = req.body;
+  const targetParentId = parentId || sponsorId;
+
   try {
-    const updateFields = [];
-    const updateValues = [];
-    if (placement) {
-      updateFields.push('placement = ?');
-      updateValues.push(placement);
+    // 1. Get the user being placed
+    const [users] = await pool.query('SELECT * FROM users WHERE user_id = ?', [id]);
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'User to place not found' });
     }
-    if (sponsorId) {
-      updateFields.push('sponsor_id = ?');
-      updateValues.push(sponsorId);
-    }
-    
-    if (updateFields.length === 0) {
-      return res.status(400).json({ message: 'No fields provided for update' });
+    const userToPlace = users[0];
+
+    if (userToPlace.placement !== 'Pending') {
+      return res.status(400).json({ message: 'User is already placed' });
     }
 
-    updateValues.push(id);
-    await pool.query(`UPDATE users SET ${updateFields.join(', ')} WHERE user_id = ?`, updateValues);
+    // Target sponsor/parent defaults to the user's original sponsor_id if not provided
+    const finalParentId = targetParentId || userToPlace.sponsor_id || 'BRIMLM-100000';
+
+    // 2. Verify target parent exists
+    const [parents] = await pool.query('SELECT * FROM users WHERE user_id = ?', [finalParentId]);
+    if (parents.length === 0) {
+      return res.status(404).json({ message: 'Target parent user not found' });
+    }
+    const parent = parents[0];
+
+    // 3. Verify that the position is not already occupied
+    const [occupied] = await pool.query('SELECT id FROM users WHERE sponsor_id = ? AND placement = ?', [finalParentId, placement]);
+    if (occupied.length > 0) {
+      return res.status(400).json({ message: `The ${placement} under user ${finalParentId} is already occupied` });
+    }
+
+    // 4. Update the placement and sponsor ID
+    await pool.query(
+      'UPDATE users SET placement = ?, sponsor_id = ? WHERE user_id = ?',
+      [placement, finalParentId, id]
+    );
+
+    // 5. Send notifications
+    await pool.query(
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', ?)",
+      [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`, finalParentId]
+    );
+
+    await pool.query(
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', 'BRIMLM-100000')",
+      [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`]
+    );
+
     res.json({ message: 'Placement updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

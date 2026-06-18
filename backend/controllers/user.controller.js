@@ -108,13 +108,14 @@ const getReferrals = async (req, res) => {
     const [users] = await pool.query('SELECT user_id FROM users WHERE id = ?', [userId]);
     const userStrId = users[0].user_id;
 
-    const [referrals] = await pool.query('SELECT id, full_name, user_id, status, created_at, volume FROM users WHERE sponsor_id = ? ORDER BY created_at DESC', [userStrId]);
+    const [referrals] = await pool.query('SELECT id, full_name, user_id, status, created_at, volume, placement FROM users WHERE sponsor_id = ? ORDER BY created_at DESC', [userStrId]);
     res.json(referrals.map(r => ({
       id: r.user_id,
       name: r.full_name,
       joined: new Date(r.created_at).toLocaleDateString(),
       volume: parseFloat(r.volume),
       status: r.status,
+      placement: r.placement,
       team: 0 // Mocking team size for now
     })));
   } catch (error) {
@@ -204,4 +205,117 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { getDashboard, getProfile, requestWithdrawal, getReferrals, getNetwork, changePassword };
+const getNotifications = async (req, res) => {
+  try {
+    const [users] = await pool.query('SELECT user_id FROM users WHERE id = ?', [req.user.id]);
+    if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+    const userStrId = users[0].user_id;
+
+    const [notifications] = await pool.query(
+      "SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 50",
+      [userStrId]
+    );
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const markNotificationsRead = async (req, res) => {
+  try {
+    const [users] = await pool.query('SELECT user_id FROM users WHERE id = ?', [req.user.id]);
+    if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+    const userStrId = users[0].user_id;
+
+    await pool.query("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0", [userStrId]);
+    res.json({ message: 'Notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updatePlacement = async (req, res) => {
+  const { id } = req.params;
+  const { placement, parentId } = req.body;
+
+  try {
+    // 1. Get the user being placed
+    const [users] = await pool.query('SELECT * FROM users WHERE user_id = ?', [id]);
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'User to place not found' });
+    }
+    const userToPlace = users[0];
+
+    if (userToPlace.placement !== 'Pending') {
+      return res.status(400).json({ message: 'User is already placed' });
+    }
+
+    // Get current logged-in user's user_id
+    const [operators] = await pool.query('SELECT user_id FROM users WHERE id = ?', [req.user.id]);
+    if (operators.length === 0) {
+      return res.status(404).json({ message: 'Operator user not found' });
+    }
+    const operatorUserId = operators[0].user_id;
+
+    // Verify operator is the original sponsor of the user being placed
+    if (userToPlace.sponsor_id !== operatorUserId) {
+      return res.status(403).json({ message: 'Not authorized to place this user' });
+    }
+
+    const finalParentId = parentId || operatorUserId;
+
+    // 2. Verify target parent exists
+    const [parents] = await pool.query('SELECT * FROM users WHERE user_id = ?', [finalParentId]);
+    if (parents.length === 0) {
+      return res.status(404).json({ message: 'Target parent user not found' });
+    }
+    const parent = parents[0];
+
+    // Verify target parent is yourself or in your downline
+    if (finalParentId !== operatorUserId) {
+      let ancestorCheck = finalParentId;
+      let isDescendant = false;
+      for (let depth = 0; depth < 50; depth++) {
+        const [parentCheck] = await pool.query('SELECT sponsor_id FROM users WHERE user_id = ?', [ancestorCheck]);
+        if (parentCheck.length === 0 || !parentCheck[0].sponsor_id) break;
+        if (parentCheck[0].sponsor_id === operatorUserId) {
+          isDescendant = true;
+          break;
+        }
+        ancestorCheck = parentCheck[0].sponsor_id;
+      }
+      if (!isDescendant) {
+        return res.status(400).json({ message: 'Target parent must be yourself or in your downline' });
+      }
+    }
+
+    // 3. Verify target placement is unoccupied
+    const [occupied] = await pool.query('SELECT id FROM users WHERE sponsor_id = ? AND placement = ?', [finalParentId, placement]);
+    if (occupied.length > 0) {
+      return res.status(400).json({ message: `The ${placement} under user ${finalParentId} is already occupied` });
+    }
+
+    // 4. Update the placement and sponsor ID
+    await pool.query(
+      'UPDATE users SET placement = ?, sponsor_id = ? WHERE user_id = ?',
+      [placement, finalParentId, id]
+    );
+
+    // 5. Send notifications
+    await pool.query(
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', ?)",
+      [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`, finalParentId]
+    );
+
+    await pool.query(
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', 'BRIMLM-100000')",
+      [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`]
+    );
+
+    res.json({ message: 'User placed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getDashboard, getProfile, requestWithdrawal, getReferrals, getNetwork, changePassword, getNotifications, markNotificationsRead, updatePlacement };

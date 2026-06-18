@@ -10,6 +10,7 @@ const generateToken = (id, role) => {
 
 const registerUser = async (req, res) => {
   const { fullName, mobile, email, password, sponsorId, placement } = req.body;
+  const targetSponsorId = sponsorId || 'BRIMLM-100000';
 
   try {
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
@@ -25,15 +26,21 @@ const registerUser = async (req, res) => {
 
     const [result] = await pool.query(
       'INSERT INTO users (full_name, mobile, email, password, plain_password, sponsor_id, placement, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [fullName, mobile, email, hashedPassword, password, sponsorId || null, placement || 'Pending', userIdStr]
+      [fullName, mobile, email, hashedPassword, password, targetSponsorId, placement || 'Pending', userIdStr]
     );
 
     const newUserId = result.insertId;
 
+    // Notify Sponsor
+    await pool.query(
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'registration', ?)",
+      [`New user registered: ${fullName} (${userIdStr}) under your referral.`, targetSponsorId]
+    );
+
     // Notify Admin
     await pool.query(
-      "INSERT INTO notifications (message, type) VALUES (?, 'registration')",
-      [`New user registered: ${fullName} (${userIdStr})`]
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'registration', 'BRIMLM-100000')",
+      [`New user registered: ${fullName} (${userIdStr}) under sponsor ${targetSponsorId}.`]
     );
 
     res.status(201).json({

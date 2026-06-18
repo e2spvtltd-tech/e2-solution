@@ -8,6 +8,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [placementModal, setPlacementModal] = useState({ open: false, userId: null, currentPlacement: '' });
   const [newPlacement, setNewPlacement] = useState('Left Side');
+  const [parentInput, setParentInput] = useState('');
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -28,13 +29,13 @@ const UserManagement = () => {
   const handleUpdatePlacement = async () => {
     try {
       await api.put(`/admin/members/${placementModal.userId}/placement`, 
-        { placement: newPlacement }
+        { placement: newPlacement, parentId: parentInput }
       );
       setPlacementModal({ open: false, userId: null, currentPlacement: '' });
       fetchUsers();
     } catch (error) {
       console.error('Failed to update placement', error);
-      alert('Failed to update placement');
+      alert(error.response?.data?.message || 'Failed to update placement');
     }
   };
 
@@ -102,7 +103,10 @@ const UserManagement = () => {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       {user.placement === 'Pending' && (
                         <button 
-                          onClick={() => setPlacementModal({ open: true, userId: user.id, currentPlacement: user.placement })}
+                          onClick={() => {
+                            setParentInput(user.sponsorId || 'BRIMLM-100000');
+                            setPlacementModal({ open: true, userId: user.id, currentPlacement: user.placement });
+                          }}
                           className="btn btn-primary" style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: '6px' }}
                         >
                           Place
@@ -128,11 +132,22 @@ const UserManagement = () => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '400px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '1.25rem', fontWeight: 'bold' }}>Assign Placement</h2>
-            <p style={{ marginBottom: '16px', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>Select which side of the tree this user should be placed on.</p>
+            <p style={{ marginBottom: '16px', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>Select the parent user and side of the tree this user should be placed on.</p>
+            
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600 }}>Parent/Sponsor ID</label>
+            <input 
+              type="text" 
+              placeholder="e.g. BRIMLM-100000" 
+              value={parentInput} 
+              onChange={(e) => setParentInput(e.target.value)}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '16px', backgroundColor: 'var(--color-bg)', outline: 'none' }}
+            />
+
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600 }}>Select Side</label>
             <select 
               value={newPlacement} 
               onChange={(e) => setNewPlacement(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '24px' }}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '24px', outline: 'none' }}
             >
               <option value="Left Side">Left Side</option>
               <option value="Right Side">Right Side</option>

@@ -7,6 +7,7 @@ import { compact, teamGrowthSeries, topPerformers, inr } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import api from "@/services/api";
+import { toastWithSound as toast } from "@/lib/toast-with-sound";
 
 export const Route = createFileRoute("/app/network")({
   head: () => ({ meta: [{ title: "Network — E2 Solutions" }] }),
@@ -107,6 +108,7 @@ const TreeNodeCard = ({ node, isRoot = false, side = null }: { node: any, isRoot
       </div>
       <p className="font-bold text-sm truncate w-full text-center text-foreground">{isRoot ? "You" : node.name}</p>
       <p className="text-[10px] font-medium text-muted-foreground uppercase mt-0.5 bg-accent/50 px-2 py-0.5 rounded-md">ID: {node.id}</p>
+      <p className="text-[11px] font-bold text-success mt-1">Vol: ₹{(node.volume || 0).toLocaleString()}</p>
       
       {!isRoot && side && (
         <div className="mt-3 flex items-center gap-1.5">
@@ -144,6 +146,9 @@ function NetworkPage() {
   const [treeData, setTreeData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [placementModal, setPlacementModal] = useState({ open: false, userId: null, originalSponsor: '' });
+  const [parentInput, setParentInput] = useState('');
+  const [placementSide, setPlacementSide] = useState<'Left Side' | 'Right Side'>('Left Side');
 
   useEffect(() => {
     Promise.all([
@@ -156,27 +161,61 @@ function NetworkPage() {
     }).catch(console.error);
   }, []);
 
+  const handleUserPlacement = async () => {
+    try {
+      await api.put(`/user/referrals/${placementModal.userId}/placement`, {
+        placement: placementSide,
+        parentId: parentInput
+      });
+      toast.success("Referral placed successfully!");
+      setPlacementModal({ open: false, userId: null, originalSponsor: '' });
+      setLoading(true);
+      const [treeRes, refRes] = await Promise.all([
+        api.get('/user/network'),
+        api.get('/user/referrals')
+      ]);
+      setTreeData(treeRes.data);
+      setReferrals(refRes.data);
+      setLoading(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to place referral");
+    }
+  };
+
   const statusTone: Record<string, string> = {
     active: "bg-success/15 text-success",
     pending: "bg-warning/20 text-warning-foreground",
     inactive: "bg-muted text-muted-foreground",
   };
 
-  const countSubtreeNodes = (node: any): number => {
-    if (!node) return 0;
-    return 1 + countSubtreeNodes(node.left) + countSubtreeNodes(node.right);
+  const getSubtreeStats = (node: any) => {
+    if (!node) return { count: 0, volume: 0 };
+    let count = 1;
+    let volume = parseFloat(node.volume || 0);
+    if (node.left) {
+      const leftStats = getSubtreeStats(node.left);
+      count += leftStats.count;
+      volume += leftStats.volume;
+    }
+    if (node.right) {
+      const rightStats = getSubtreeStats(node.right);
+      count += rightStats.count;
+      volume += rightStats.volume;
+    }
+    return { count, volume };
   };
 
-  const leftCount = treeData?.left ? countSubtreeNodes(treeData.left) : 0;
-  const rightCount = treeData?.right ? countSubtreeNodes(treeData.right) : 0;
-  const totalTeam = leftCount + rightCount;
+  const leftStats = treeData?.left ? getSubtreeStats(treeData.left) : { count: 0, volume: 0 };
+  const rightStats = treeData?.right ? getSubtreeStats(treeData.right) : { count: 0, volume: 0 };
+  const totalTeam = leftStats.count + rightStats.count;
   const directReferrals = referrals.length;
+  const matchingVolume = Math.min(leftStats.volume, rightStats.volume);
 
   const stats = [
     { icon: Users, label: "Total Team", value: totalTeam.toString(), tone: "primary" },
     { icon: UserPlus, label: "Direct Referrals", value: directReferrals.toString(), tone: "accent" },
-    { icon: ArrowLeft, label: "Left Team", value: leftCount.toString(), tone: "accent" },
-    { icon: ArrowRight, label: "Right Team", value: rightCount.toString(), tone: "accent" },
+    { icon: ArrowLeft, label: "Left Team", value: `${leftStats.count} (₹${leftStats.volume.toLocaleString()})`, tone: "accent" },
+    { icon: ArrowRight, label: "Right Team", value: `${rightStats.count} (₹${rightStats.volume.toLocaleString()})`, tone: "accent" },
   ] as const;
 
   return (
@@ -250,6 +289,18 @@ function NetworkPage() {
                       </p>
                     </div>
                   ))}
+                  <div className="rounded-2xl p-4 md:p-5 shadow-soft bg-card col-span-2 md:col-span-4 flex items-center justify-between border border-primary/20">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <GitMerge className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Matching Vol (Weaker Leg)</p>
+                        <p className="text-xl font-bold text-foreground">₹{matchingVolume.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-primary bg-primary/15 px-3 py-1 rounded-full">Active Pairing</span>
+                  </div>
                 </section>
 
                 <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft">
@@ -346,9 +397,22 @@ function NetworkPage() {
                       <p className="font-semibold text-sm">{r.name}</p>
                       <p className="text-xs text-muted-foreground">Joined: {r.joined}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-success">+ {inr(r.volume || 0)}</p>
-                      <p className={cn("text-xs font-semibold capitalize", statusTone[r.status] || "text-muted-foreground")}>{r.status}</p>
+                    <div className="text-right flex items-center gap-4">
+                      <div>
+                        <p className="text-sm font-bold text-success">+ {inr(r.volume || 0)}</p>
+                        <p className={cn("text-xs font-semibold capitalize", statusTone[r.status] || "text-muted-foreground")}>{r.status}</p>
+                      </div>
+                      {r.placement === 'Pending' && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setPlacementModal({ open: true, userId: r.id, originalSponsor: r.sponsorId });
+                            setParentInput(treeData?.id || "");
+                          }}
+                        >
+                          Place
+                        </Button>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -357,6 +421,47 @@ function NetworkPage() {
           </div>
         )}
       </div>
+
+      {placementModal.open && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-sm shadow-soft space-y-4">
+            <h3 className="text-lg font-bold text-foreground">Place Referral</h3>
+            <p className="text-xs text-muted-foreground">Select the parent user and side of the tree this user should be placed on.</p>
+            
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-foreground block">Parent ID</label>
+              <input 
+                type="text" 
+                placeholder="e.g. BRIMLM-100000" 
+                value={parentInput} 
+                onChange={(e) => setParentInput(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-foreground block">Select Side</label>
+              <select 
+                value={placementSide} 
+                onChange={(e) => setPlacementSide(e.target.value as any)}
+                className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
+              >
+                <option value="Left Side">Left Side</option>
+                <option value="Right Side">Right Side</option>
+              </select>
+            </div>
+
+            <div className="flex gap-3 pt-2 justify-end">
+              <Button size="sm" variant="outline" onClick={() => setPlacementModal({ open: false, userId: null, originalSponsor: '' })}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleUserPlacement}>
+                Save Placement
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
