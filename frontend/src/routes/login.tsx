@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toastWithSound as toast } from "@/lib/toast-with-sound";
 import { Lock, Mail, Eye, EyeOff, LogIn, Shield, ArrowLeft } from "lucide-react";
 
 import api from "@/services/api";
@@ -9,6 +9,12 @@ export const Route = createFileRoute("/login")({
   head: () => ({ 
     meta: [{ title: "Sign In — E2 Solutions" }]
   }),
+  // If already logged in, skip login page and go straight to app
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && localStorage.getItem("token")) {
+      throw redirect({ to: "/app" });
+    }
+  },
   component: LoginPage,
 });
 

@@ -83,14 +83,19 @@ function Dashboard() {
       try {
         const res = await api.get('/user/dashboard');
         return res.data;
-      } catch (err) {
-        localStorage.removeItem('token');
-        navigate({ to: '/login' });
+      } catch (err: any) {
+        // Only clear token and redirect on 401 (unauthorized/expired token)
+        // Don't clear on network errors or other failures
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          navigate({ to: '/login' });
+        }
         throw err;
       }
     },
     refetchInterval: 30000, // Poll every 30 seconds (was 1s — caused mobile lag)
     staleTime: 10000, // Keep data fresh for 10 seconds
+    retry: 2, // Retry failed requests twice before giving up
   });
 
   if (loading || !data) return <div className="p-4 text-center">Loading dashboard...</div>;

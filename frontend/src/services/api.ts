@@ -9,6 +9,7 @@ const api = axios.create({
   },
 });
 
+// Attach token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -22,4 +23,22 @@ api.interceptors.request.use(
   }
 );
 
+// Handle expired/invalid tokens globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid — clear and redirect to login
+      localStorage.removeItem('token');
+      // Only redirect if not already on login/register/home pages
+      const path = window.location.pathname;
+      if (path.startsWith('/app')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
+

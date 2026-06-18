@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, LogIn, Shield, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner';
 import './Login.css';
 import api from '../services/api';
+import { playNotificationSound } from '../services/notificationSound';
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -24,6 +25,7 @@ const Login = ({ onLogin }) => {
       // Authenticate using the real API
       const res = await api.post('/auth/login', { emailOrId: email, password });
       localStorage.setItem('token', res.data.token);
+      playNotificationSound();
       toast.success('Welcome back!');
       onLogin();
     } catch (err) {

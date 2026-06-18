@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toastWithSound as toast } from "@/lib/toast-with-sound";
 import { ArrowDownLeft, ArrowUpRight, Repeat, Wallet2, Gift, TrendingUp, RefreshCw, Send, CheckCircle, Clock, XCircle } from "lucide-react";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Button } from "@/components/ui/button";

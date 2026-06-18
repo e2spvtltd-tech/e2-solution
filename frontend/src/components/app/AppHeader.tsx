@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell, Search, Wallet2, X, Info } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { toast } from "sonner";
 import { Logo } from "@/components/brand/Logo";
 import { SidePanel } from "./SidePanel";
 import { Button } from "@/components/ui/button";
+import { playNotificationSound } from "@/lib/notification-sound";
 
 import api from "@/services/api";
 
@@ -21,11 +21,43 @@ export function AppHeader({
   const [hasNewNotif, setHasNewNotif] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
+  const prevNotifCountRef = useRef(0);
+  const isFirstLoadRef = useRef(true);
 
-  // Real notifications will be wired up via backend sockets later
+  // Fetch profile
   useEffect(() => {
-    // Socket listener placeholder
     api.get("/user/profile").then(res => setProfile(res.data)).catch(() => {});
+  }, []);
+
+  // Poll notifications every 15 seconds with sound
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await api.get("/user/notifications");
+        const notifs = Array.isArray(res.data) ? res.data : (res.data?.notifications || []);
+        const mapped = notifs.map((n: any) => ({
+          id: n.id,
+          title: n.title || n.type || "Notification",
+          message: n.message,
+          time: n.created_at ? new Date(n.created_at).toLocaleString() : "Just now",
+        }));
+        setNotifications(mapped);
+
+        // Play sound when new notifications arrive
+        if (!isFirstLoadRef.current && mapped.length > prevNotifCountRef.current) {
+          setHasNewNotif(true);
+          playNotificationSound();
+        }
+        isFirstLoadRef.current = false;
+        prevNotifCountRef.current = mapped.length;
+      } catch {
+        // Silently fail — notifications are non-critical
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const initials = profile?.full_name 

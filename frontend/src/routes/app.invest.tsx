@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toastWithSound as toast } from "@/lib/toast-with-sound";
 import { Check, Star, TrendingUp, History, CheckCircle, Activity } from "lucide-react";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Button } from "@/components/ui/button";

@@ -1,7 +1,13 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { BottomNav } from "@/components/app/BottomNav";
 
 export const Route = createFileRoute("/app")({
+  // Auth guard — redirect to login if no token found
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({ to: "/login" });
+    }
+  },
   component: AppLayout,
 });
 

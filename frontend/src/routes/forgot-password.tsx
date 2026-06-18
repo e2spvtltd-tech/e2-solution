@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toastWithSound as toast } from "@/lib/toast-with-sound";
 import { AuthShell, Field } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 

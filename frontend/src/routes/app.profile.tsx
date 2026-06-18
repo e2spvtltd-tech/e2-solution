@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toastWithSound as toast } from "@/lib/toast-with-sound";
 import api from "@/services/api";
 import { cn } from "@/lib/utils";
 

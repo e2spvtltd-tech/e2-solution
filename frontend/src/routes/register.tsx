@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toastWithSound as toast } from "@/lib/toast-with-sound";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { AuthShell, Field } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";

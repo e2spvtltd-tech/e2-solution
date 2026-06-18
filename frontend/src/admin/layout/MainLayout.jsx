@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Users, ArrowLeftRight, BarChart2, Settings, Bell, Wallet, Plus, Search, Contact, LayoutGrid, Package, Landmark, Gift, User, Headset, ChevronRight, Menu, LogOut, Network, Briefcase, TrendingUp, Banknote, FileText, Megaphone, MessageSquare, ShieldCheck, UserCog } from 'lucide-react';
 import api from '../services/api';
+import { playNotificationSound } from '../services/notificationSound';
 import './MainLayout.css';
 
 const MainLayout = ({ children, onLogout }) => {
@@ -9,18 +10,29 @@ const MainLayout = ({ children, onLogout }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showWalletDropdown, setShowWalletDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const prevNotifCountRef = useRef(0);
+  const isFirstLoadRef = useRef(true);
   const location = useLocation();
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const res = await api.get('/admin/notifications');
-        setNotifications(res.data.map(n => ({
+        const newNotifs = res.data.map(n => ({
           id: n.id,
           title: n.type === 'registration' ? 'New Registration' : 'Notification',
           message: n.message,
           time: new Date(n.created_at).toLocaleString()
-        })));
+        }));
+        
+        // Play sound when new notifications arrive
+        if (!isFirstLoadRef.current && newNotifs.length > prevNotifCountRef.current) {
+          playNotificationSound();
+        }
+        isFirstLoadRef.current = false;
+        prevNotifCountRef.current = newNotifs.length;
+        
+        setNotifications(newNotifs);
       } catch (err) {
         console.error('Failed to fetch notifications', err);
       }
