@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, QrCode, Copy, Check, Mail, Phone, Shield } from 'lucide-react';
+import api from '../services/api';
 
 const AdminProfile = () => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [profile, setProfile] = useState(null);
   
-  const referralCode = "BMLM-1000";
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/admin/profile');
+        setProfile(res.data);
+      } catch (err) {
+        console.error('Failed to fetch admin profile', err);
+      }
+    };
+    fetchProfile();
+  }, []);
+  
+  const referralCode = profile?.userId || "BRIMLM-100000";
   const referralLink = `http://localhost:5174/register?sponsor=${referralCode}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(referralLink)}`;
 
@@ -22,6 +36,10 @@ const AdminProfile = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
+  const displayName = profile?.fullName || "System Admin";
+  const displayEmail = profile?.email || "admin@ec2.com";
+  const displayMobile = profile?.mobile || "+91 99999 99999";
+
   return (
     <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -36,11 +54,11 @@ const AdminProfile = () => {
         <div className="card" style={{ padding: '32px', gridColumn: 'span 2' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px' }}>
             <div style={{ width: '96px', height: '96px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '36px', fontWeight: 'bold', boxShadow: '0 10px 25px rgba(91, 61, 245, 0.2)' }}>
-              A
+              {displayName.charAt(0)}
             </div>
             <div>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                System Admin <Shield size={24} color="#3b82f6" />
+                {displayName} <Shield size={24} color="#3b82f6" />
               </h2>
               <span style={{ padding: '4px 12px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', marginTop: '8px', display: 'inline-block' }}>Super Administrator</span>
             </div>
@@ -51,14 +69,14 @@ const AdminProfile = () => {
               <Mail size={24} color="var(--color-text-muted)" />
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>Email Address</p>
-                <p style={{ margin: 0, fontWeight: '600' }}>admin@ec2.com</p>
+                <p style={{ margin: 0, fontWeight: '600' }}>{displayEmail}</p>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', borderRadius: '12px', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
               <Phone size={24} color="var(--color-text-muted)" />
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>Phone Number</p>
-                <p style={{ margin: 0, fontWeight: '600' }}>+91 99999 99999</p>
+                <p style={{ margin: 0, fontWeight: '600' }}>{displayMobile}</p>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', borderRadius: '12px', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>

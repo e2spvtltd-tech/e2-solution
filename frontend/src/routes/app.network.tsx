@@ -13,12 +13,7 @@ export const Route = createFileRoute("/app/network")({
   component: NetworkPage,
 });
 
-const stats = [
-  { icon: Users, label: "Total Team", value: "0", tone: "primary" },
-  { icon: UserPlus, label: "Direct Referrals", value: "0", tone: "accent" },
-  { icon: ArrowLeft, label: "Left Team", value: "0", tone: "accent" },
-  { icon: ArrowRight, label: "Right Team", value: "0", tone: "accent" },
-] as const;
+
 
 const TeamChart = memo(function TeamChart() {
   return (
@@ -166,6 +161,23 @@ function NetworkPage() {
     pending: "bg-warning/20 text-warning-foreground",
     inactive: "bg-muted text-muted-foreground",
   };
+
+  const countSubtreeNodes = (node: any): number => {
+    if (!node) return 0;
+    return 1 + countSubtreeNodes(node.left) + countSubtreeNodes(node.right);
+  };
+
+  const leftCount = treeData?.left ? countSubtreeNodes(treeData.left) : 0;
+  const rightCount = treeData?.right ? countSubtreeNodes(treeData.right) : 0;
+  const totalTeam = leftCount + rightCount;
+  const directReferrals = referrals.length;
+
+  const stats = [
+    { icon: Users, label: "Total Team", value: totalTeam.toString(), tone: "primary" },
+    { icon: UserPlus, label: "Direct Referrals", value: directReferrals.toString(), tone: "accent" },
+    { icon: ArrowLeft, label: "Left Team", value: leftCount.toString(), tone: "accent" },
+    { icon: ArrowRight, label: "Right Team", value: rightCount.toString(), tone: "accent" },
+  ] as const;
 
   return (
     <div className="no-scrollbar">

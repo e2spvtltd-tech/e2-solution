@@ -142,6 +142,30 @@ const BinaryNetwork = () => {
     fetchTree();
   }, []);
 
+  // Helper to count nodes and sum volumes in a subtree
+  const getSubtreeStats = (node) => {
+    if (!node) return { count: 0, volume: 0 };
+    
+    let count = 1;
+    let volume = parseFloat(node.volume || 0);
+    
+    if (node.left) {
+      const leftStats = getSubtreeStats(node.left);
+      count += leftStats.count;
+      volume += leftStats.volume;
+    }
+    if (node.right) {
+      const rightStats = getSubtreeStats(node.right);
+      count += rightStats.count;
+      volume += rightStats.volume;
+    }
+    
+    return { count, volume };
+  };
+
+  const leftStats = treeData?.left ? getSubtreeStats(treeData.left) : { count: 0, volume: 0 };
+  const rightStats = treeData?.right ? getSubtreeStats(treeData.right) : { count: 0, volume: 0 };
+
   return (
     <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="page-header">
@@ -155,28 +179,28 @@ const BinaryNetwork = () => {
             <div className="stat-icon blue-light"><Users size={20} /></div>
           </div>
           <p className="stat-label">Left Team</p>
-          <h2 className="stat-value">0</h2>
+          <h2 className="stat-value">{leftStats.count}</h2>
         </div>
         <div className="stat-card card">
           <div className="stat-header">
             <div className="stat-icon purple-light"><Users size={20} /></div>
           </div>
           <p className="stat-label">Right Team</p>
-          <h2 className="stat-value">0</h2>
+          <h2 className="stat-value">{rightStats.count}</h2>
         </div>
         <div className="stat-card card">
           <div className="stat-header">
             <div className="stat-icon green-light"><Activity size={20} /></div>
           </div>
           <p className="stat-label">Left Business Vol</p>
-          <h2 className="stat-value text-success">₹0</h2>
+          <h2 className="stat-value text-success">₹{leftStats.volume.toLocaleString()}</h2>
         </div>
         <div className="stat-card card">
           <div className="stat-header">
             <div className="stat-icon red-light"><Activity size={20} /></div>
           </div>
           <p className="stat-label">Right Business Vol</p>
-          <h2 className="stat-value text-danger">₹0</h2>
+          <h2 className="stat-value text-danger">₹{rightStats.volume.toLocaleString()}</h2>
         </div>
       </div>
 

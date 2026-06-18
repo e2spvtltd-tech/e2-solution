@@ -125,7 +125,7 @@ const getReferrals = async (req, res) => {
 const buildTree = async (user_id, currentDepth, maxDepth) => {
   if (!user_id || currentDepth > maxDepth) return null;
 
-  const [users] = await pool.query('SELECT full_name, user_id, status FROM users WHERE user_id = ?', [user_id]);
+  const [users] = await pool.query('SELECT full_name, user_id, status, volume FROM users WHERE user_id = ?', [user_id]);
   if (users.length === 0) return null;
 
   const user = users[0];
@@ -133,12 +133,17 @@ const buildTree = async (user_id, currentDepth, maxDepth) => {
     id: user.user_id,
     name: user.full_name,
     status: user.status === 'ACTIVE' ? 'active' : 'inactive',
+    volume: parseFloat(user.volume || 0),
     left: null,
     right: null
   };
 
   if (currentDepth < maxDepth) {
-    const [children] = await pool.query('SELECT user_id, placement FROM users WHERE sponsor_id = ?', [user_id]);
+    const sponsorIds = [user_id];
+    if (user_id === 'BRIMLM-100000') {
+      sponsorIds.push('BMLM-1000');
+    }
+    const [children] = await pool.query('SELECT user_id, placement FROM users WHERE sponsor_id IN (?)', [sponsorIds]);
     const leftChild = children.find(c => c.placement === 'Left Side');
     const rightChild = children.find(c => c.placement === 'Right Side');
 
