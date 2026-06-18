@@ -22,10 +22,48 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      workbox: {
+        // Precache all built assets (JS, CSS, HTML) for offline Home page
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
+        // Runtime caching for Google Fonts so Home page renders offline
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+        // Allow the service worker to handle navigation requests for offline
+        navigateFallback: null,
+      },
       manifest: {
-        name: 'Binary MLM User',
-        short_name: 'MLM User',
-        description: 'User Panel for Binary MLM',
+        name: 'E2 Solutions',
+        short_name: 'E2 Solutions',
+        description: 'E2 Solutions — Institutional-grade Network Investing Platform',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        orientation: 'portrait',
         theme_color: '#5B3DF5',
         background_color: '#ffffff',
         icons: [

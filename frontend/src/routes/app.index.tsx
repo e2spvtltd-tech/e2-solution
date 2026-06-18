@@ -89,8 +89,8 @@ function Dashboard() {
         throw err;
       }
     },
-    refetchInterval: 1000, // Poll every second for live updates
-    staleTime: 500, // Keep data fresh
+    refetchInterval: 30000, // Poll every 30 seconds (was 1s — caused mobile lag)
+    staleTime: 10000, // Keep data fresh for 10 seconds
   });
 
   if (loading || !data) return <div className="p-4 text-center">Loading dashboard...</div>;

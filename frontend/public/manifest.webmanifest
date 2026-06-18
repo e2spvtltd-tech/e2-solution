@@ -1,10 +1,13 @@
 {
-  "name": "Binary MLM User",
-  "short_name": "MLM User",
-  "description": "User Panel for Binary MLM",
+  "name": "E2 Solutions",
+  "short_name": "E2 Solutions",
+  "description": "E2 Solutions — Institutional-grade Network Investing Platform",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#5B3DF5",
   "background_color": "#ffffff",
-  "display": "standalone",
   "icons": [
     {
       "src": "favicon.svg",
