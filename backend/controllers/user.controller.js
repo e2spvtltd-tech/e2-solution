@@ -10,20 +10,21 @@ const getDashboard = async (req, res) => {
     }
     const user = users[0];
 
-    // Get team members count
-    const [team] = await pool.query('SELECT COUNT(*) as count FROM users WHERE sponsor_id = ?', [user.user_id]);
-    
-    // Sum incomes
-    const [earnings] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type IN ('roi', 'binary', 'referral') AND status = 'COMPLETED'", [userId]);
-    const [binary] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type = 'binary' AND status = 'COMPLETED'", [userId]);
-    const [investments] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type = 'deposit' AND status = 'COMPLETED'", [userId]);
-    const [roi] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type = 'roi' AND status = 'COMPLETED' AND DATE(created_at) = CURDATE()", [userId]);
-
-    // Get recent activity
-    const [transactions] = await pool.query(
-      'SELECT id, title, amount, type as kind, created_at as time FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
-      [userId]
-    );
+    const [
+      [team],
+      [earnings],
+      [binary],
+      [investments],
+      [roi],
+      [transactions]
+    ] = await Promise.all([
+      pool.query('SELECT COUNT(*) as count FROM users WHERE sponsor_id = ?', [user.user_id]),
+      pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type IN ('roi', 'binary', 'referral') AND status = 'COMPLETED'", [userId]),
+      pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type = 'binary' AND status = 'COMPLETED'", [userId]),
+      pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type = 'deposit' AND status = 'COMPLETED'", [userId]),
+      pool.query("SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND type = 'roi' AND status = 'COMPLETED' AND DATE(created_at) = CURDATE()", [userId]),
+      pool.query('SELECT id, title, amount, type as kind, created_at as time FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 5', [userId])
+    ]);
 
     res.json({
       totalEarnings: earnings[0].total || 0,

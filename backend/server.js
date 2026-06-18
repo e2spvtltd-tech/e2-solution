@@ -30,6 +30,28 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Graceful shutdown to prevent database connection exhaustion during nodemon restarts
+const { pool } = require('./config/db');
+
+const shutdown = async () => {
+  console.log('Shutting down server and closing database connections...');
+  if (pool) {
+    try {
+      await pool.end();
+      console.log('Database pool closed.');
+    } catch (err) {
+      console.error('Error closing database pool', err);
+    }
+  }
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.once('SIGUSR2', shutdown); // For nodemon restarts
+process.on('SIGINT', shutdown);  // For Ctrl+C
+process.on('SIGTERM', shutdown); // For normal termination

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://e2solutions.com/sitemap.xml

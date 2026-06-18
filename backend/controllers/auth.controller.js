@@ -53,6 +53,18 @@ const loginUser = async (req, res) => {
   const { emailOrId, password } = req.body;
 
   try {
+    // Hardcoded Permanent Admin Login
+    if (emailOrId === 'admin@e2solution.com' && password === 'e2solution@123') {
+      return res.json({
+        id: 0,
+        userId: 'ADMIN-001',
+        fullName: 'Administrator',
+        email: 'admin@e2solution.com',
+        role: 'ADMIN',
+        token: generateToken(0, 'ADMIN'),
+      });
+    }
+
     const [users] = await pool.query(
       'SELECT * FROM users WHERE email = ? OR user_id = ?',
       [emailOrId, emailOrId]
@@ -69,13 +81,14 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Force all database-registered users to act as standard users
     res.json({
       id: user.id,
       userId: user.user_id,
       fullName: user.full_name,
       email: user.email,
-      role: user.role,
-      token: generateToken(user.id, user.role),
+      role: 'USER',
+      token: generateToken(user.id, 'USER'),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
