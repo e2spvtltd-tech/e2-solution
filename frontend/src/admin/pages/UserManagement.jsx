@@ -104,7 +104,7 @@ const UserManagement = () => {
                       {user.placement === 'Pending' && (
                         <button 
                           onClick={() => {
-                            setParentInput(user.sponsorId || 'BRIMLM-100000');
+                            setParentInput(user.sponsorId || 'BRIMLM-1000');
                             setPlacementModal({ open: true, userId: user.id, currentPlacement: user.placement });
                           }}
                           className="btn btn-primary" style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: '6px' }}
@@ -137,7 +137,7 @@ const UserManagement = () => {
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600 }}>Parent/Sponsor ID</label>
             <input 
               type="text" 
-              placeholder="e.g. BRIMLM-100000" 
+              placeholder="e.g. BRIMLM-1000" 
               value={parentInput} 
               onChange={(e) => setParentInput(e.target.value)}
               style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '16px', backgroundColor: 'var(--color-bg)', outline: 'none' }}

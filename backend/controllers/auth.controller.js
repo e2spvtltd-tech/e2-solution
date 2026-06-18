@@ -10,7 +10,7 @@ const generateToken = (id, role) => {
 
 const registerUser = async (req, res) => {
   const { fullName, mobile, email, password, sponsorId, placement } = req.body;
-  const targetSponsorId = sponsorId || 'BRIMLM-100000';
+  const targetSponsorId = sponsorId || 'BRIMLM-1000';
 
   try {
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
@@ -39,7 +39,7 @@ const registerUser = async (req, res) => {
 
     // Notify Admin
     await pool.query(
-      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'registration', 'BRIMLM-100000')",
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'registration', 'BRIMLM-1000')",
       [`New user registered: ${fullName} (${userIdStr}) under sponsor ${targetSponsorId}.`]
     );
 

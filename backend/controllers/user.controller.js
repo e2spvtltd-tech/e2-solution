@@ -141,8 +141,9 @@ const buildTree = async (user_id, currentDepth, maxDepth) => {
 
   if (currentDepth < maxDepth) {
     const sponsorIds = [user_id];
-    if (user_id === 'BRIMLM-100000') {
+    if (user_id === 'BRIMLM-1000') {
       sponsorIds.push('BMLM-1000');
+      sponsorIds.push('BRIMLM-100000');
     }
     const [children] = await pool.query('SELECT user_id, placement FROM users WHERE sponsor_id IN (?)', [sponsorIds]);
     const leftChild = children.find(c => c.placement === 'Left Side');
@@ -308,7 +309,7 @@ const updatePlacement = async (req, res) => {
     );
 
     await pool.query(
-      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', 'BRIMLM-100000')",
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', 'BRIMLM-1000')",
       [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`]
     );
 

@@ -30,13 +30,13 @@ async function seedData() {
     // 1. Admin
     await connection.query(`
       INSERT INTO users (full_name, mobile, email, password, user_id, role, status, volume, main_wallet, income_wallet, created_at)
-      VALUES ('System Admin', '9999999999', 'admin@ec2.com', ?, 'BMLM-1000', 'ADMIN', 'ACTIVE', 0, 0, 0, '2023-01-01 10:00:00')
+      VALUES ('System Admin', '9999999999', 'admin@ec2.com', ?, 'BRIMLM-1000', 'ADMIN', 'ACTIVE', 0, 0, 0, '2023-01-01 10:00:00')
     `, [password]);
 
     // Generate random users
     const users = [
-      { name: 'John Doe', uid: 'BMLM-1001', sponsor: 'BMLM-1000', placement: 'Left Side' },
-      { name: 'Jane Smith', uid: 'BMLM-1002', sponsor: 'BMLM-1000', placement: 'Right Side' },
+      { name: 'John Doe', uid: 'BMLM-1001', sponsor: 'BRIMLM-1000', placement: 'Left Side' },
+      { name: 'Jane Smith', uid: 'BMLM-1002', sponsor: 'BRIMLM-1000', placement: 'Right Side' },
       
       { name: 'Alice Johnson', uid: 'BMLM-1003', sponsor: 'BMLM-1001', placement: 'Left Side' },
       { name: 'Bob Williams', uid: 'BMLM-1004', sponsor: 'BMLM-1001', placement: 'Right Side' },

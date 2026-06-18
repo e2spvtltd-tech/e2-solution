@@ -432,7 +432,7 @@ function NetworkPage() {
               <label className="text-xs font-semibold text-foreground block">Parent ID</label>
               <input 
                 type="text" 
-                placeholder="e.g. BRIMLM-100000" 
+                placeholder="e.g. BRIMLM-1000" 
                 value={parentInput} 
                 onChange={(e) => setParentInput(e.target.value)}
                 className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"

@@ -20,7 +20,7 @@ const AdminProfile = () => {
     fetchProfile();
   }, []);
   
-  const referralCode = profile?.userId || "BRIMLM-100000";
+  const referralCode = profile?.userId || "BRIMLM-1000";
   const referralLink = `http://localhost:5174/register?sponsor=${referralCode}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(referralLink)}`;
 
