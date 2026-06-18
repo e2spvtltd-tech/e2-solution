@@ -12,15 +12,9 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  nitro: true,
   vite: {
-    build: {
-      rollupOptions: {
-        input: {
-          main: 'index.html',
-          admin: 'admin.html'
-        }
-      }
-    }
+    // build options are handled by TanStack config
   },
 
   plugins: [
