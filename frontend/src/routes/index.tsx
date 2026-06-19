@@ -50,7 +50,7 @@ function Landing() {
       {/* Nav */}
       <header className="flex items-center justify-between px-5 py-4 lg:py-6 max-w-6xl mx-auto w-full relative z-10 shrink-0">
         <Logo />
-        <Button asChild size="sm" variant="hero" className="rounded-full px-6 md:px-8">
+        <Button asChild size="sm" variant="hero" className="rounded-full px-6 md:px-8 min-h-[44px] min-w-[44px]">
           <Link to="/login">Sign In</Link>
         </Button>
       </header>

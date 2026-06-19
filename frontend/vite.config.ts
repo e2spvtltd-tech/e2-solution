@@ -18,7 +18,17 @@ export default defineConfig({
   },
 
   plugins: [
-    ViteImageOptimizer({}),
+    ViteImageOptimizer({
+      webp: {
+        quality: 80,
+      },
+      jpeg: {
+        quality: 80,
+      },
+      png: {
+        quality: 80,
+      },
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],

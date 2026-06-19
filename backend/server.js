@@ -9,6 +9,8 @@ connectDB();
 const app = express();
 
 // Middleware
+const compression = require('compression');
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
