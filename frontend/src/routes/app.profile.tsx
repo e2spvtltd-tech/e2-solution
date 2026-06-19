@@ -27,7 +27,7 @@ import api from "@/services/api";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/profile")({
-  head: () => ({ meta: [{ title: "User Settings — E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "User Settings - e2solution.in" }] }),
   component: ProfilePage,
 });
 

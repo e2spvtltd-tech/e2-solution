@@ -7,7 +7,7 @@ import api from "@/services/api";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ 
-    meta: [{ title: "Sign In — E2 Solutions" }]
+    meta: [{ title: "Sign In - e2solution.in" }]
   }),
   // If already logged in, skip login page and go straight to app
   beforeLoad: () => {

@@ -40,14 +40,14 @@ function App() {
   const [isClient, setIsClient] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (urlToken) return true;
-    if (typeof window !== 'undefined') return !!localStorage.getItem('token');
+    if (typeof window !== 'undefined') return !!localStorage.getItem('adminToken');
     return false;
   });
 
   useEffect(() => {
     setIsClient(true);
     if (urlToken) {
-      localStorage.setItem('token', urlToken);
+      localStorage.setItem('adminToken', urlToken);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [urlToken]);

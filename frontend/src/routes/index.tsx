@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "E2 Solutions â€” Build Your Future with Network Investing" },
+      { title: "Home Page - e2solution.in" },
       {
         name: "description",
         content:
@@ -28,9 +28,9 @@ function Landing() {
     const intervalId = setInterval(() => {
       // Only scroll if we have horizontal overflow (mobile)
       if (scrollContainer.scrollWidth <= scrollContainer.clientWidth) return;
-      
+
       const isAtEnd = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 10;
-      
+
       if (isAtEnd) {
         scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
@@ -57,24 +57,24 @@ function Landing() {
 
       {/* Hero */}
       <section className="px-5 text-center max-w-6xl mx-auto w-full flex-1 flex flex-col relative z-10">
-        
+
         {/* Main Text Content - Centered */}
         <div className="flex-1 flex flex-col justify-center items-center w-full py-8 md:py-10">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/80 backdrop-blur-sm border border-primary/20 px-4 py-1.5 text-xs md:text-sm font-semibold text-primary shadow-sm">
             <ShieldCheck className="h-4 w-4" /> Institutional-grade Platform
           </span>
-          
+
           <h1 className="mt-6 md:mt-8 text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-extrabold leading-tight tracking-tight text-foreground">
             Build Your Future.
             <br />
             <span className="bg-gradient-primary bg-clip-text text-transparent">Start Earning Now.</span>
           </h1>
-          
+
           <p className="mt-4 md:mt-6 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             A smart platform for investment growth, binary networking, and financial rewards. Secure your
             financial future today with our automated ROI system.
           </p>
-          
+
           <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-center w-full sm:w-auto">
             <Button asChild variant="hero" className="rounded-full px-8 md:px-12 h-14 md:h-16 text-base md:text-lg shadow-glow w-full sm:w-auto font-bold transition-transform hover:scale-105">
               <Link to="/register">
@@ -86,7 +86,7 @@ function Landing() {
 
         {/* Feature Cards replacing the image - Anchored to bottom */}
         <div className="w-full mt-auto md:mt-8 lg:mt-12">
-          <div 
+          <div
             ref={scrollRef}
             className="flex md:grid md:grid-cols-3 gap-4 md:gap-8 text-left w-[100vw] md:w-full overflow-x-auto snap-x snap-mandatory no-scrollbar pt-2 px-6 md:px-0 -mx-5 md:mx-0 scroll-smooth"
           >

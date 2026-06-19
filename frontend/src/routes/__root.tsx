@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "E2 Solutions â€” Institutional-grade Network Investing" },
+      { title: "e2solution.in - Institutional-grade Network Investing" },
       {
         name: "description",
         content:
@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "E2 Solutions" },
       { name: "theme-color", content: "#5B3DF5" },
-      { property: "og:title", content: "E2 Solutions â€” Institutional-grade Network Investing" },
+      { property: "og:title", content: "e2solution.in - Institutional-grade Network Investing" },
       {
         property: "og:description",
         content: "Build your future with daily ROI, binary income and a powerful referral network.",
@@ -169,8 +169,9 @@ function RootShell({ children }: { children: ReactNode }) {
               // Also intercept console.error for this specific error just in case
               const originalConsoleError = console.error;
               console.error = function(...args) {
-                if (typeof args[0] === 'string' && args[0].includes('useblackbox.io')) {
-                  return;
+                if (typeof args[0] === 'string') {
+                  if (args[0].includes('useblackbox.io')) return;
+                  if (args[0].includes('Cannot update a component') && args[0].includes('BrowserRouter')) return;
                 }
                 return originalConsoleError.apply(console, args);
               };
@@ -178,7 +179,7 @@ function RootShell({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body>
+      <body suppressHydrationWarning={true}>
         {children}
         <Toaster position="top-center" richColors />
 

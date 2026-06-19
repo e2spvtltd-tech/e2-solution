@@ -5,7 +5,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/otp")({
-  head: () => ({ meta: [{ title: "Verify OTP â€” E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Verify OTP - e2solution.in" }] }),
   component: OtpPage,
 });
 

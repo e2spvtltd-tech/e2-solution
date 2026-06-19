@@ -13,5 +13,9 @@ router.get('/network', protect, admin, getNetwork);
 router.get('/profile', protect, admin, getAdminProfile);
 router.get('/members/:id', protect, admin, getMemberById);
 router.put('/members/:id/placement', protect, admin, updatePlacement);
+router.put('/members/:id', protect, admin, require('../controllers/admin.controller').updateUser);
+router.put('/members/:id/status', protect, admin, require('../controllers/admin.controller').toggleUserStatus);
+router.delete('/members/:id', protect, admin, require('../controllers/admin.controller').deleteUser);
+router.get('/reports', protect, admin, require('../controllers/admin.controller').getReports);
 
 module.exports = router;

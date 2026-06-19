@@ -4,6 +4,19 @@ const getDashboard = async (req, res) => {
   try {
     const userId = req.user.id;
 
+    if (req.user.role === 'ADMIN') {
+      return res.json({
+        totalEarnings: 0,
+        walletBalance: 0,
+        binaryIncome: 0,
+        totalInvestment: 0,
+        todayEarning: 0,
+        teamMembers: 0,
+        recentActivity: [],
+        wallets: { main: 0, income: 0, bonus: 0 }
+      });
+    }
+
     const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
     if (users.length === 0) {
       return res.status(404).json({ message: 'User not found' });
@@ -27,11 +40,11 @@ const getDashboard = async (req, res) => {
     ]);
 
     res.json({
-      totalEarnings: earnings[0].total || 0,
-      walletBalance: user.main_wallet || 0,
-      binaryIncome: binary[0].total || 0,
-      totalInvestment: investments[0].total || 0,
-      todayEarning: roi[0].total || 0,
+      totalEarnings: parseFloat(earnings[0].total || 0),
+      walletBalance: parseFloat(user.main_wallet || 0),
+      binaryIncome: parseFloat(binary[0].total || 0),
+      totalInvestment: parseFloat(investments[0].total || 0),
+      todayEarning: parseFloat(roi[0].total || 0),
       teamMembers: team[0].count || 0,
       recentActivity: transactions.map(t => ({
         id: t.id.toString(),
@@ -54,6 +67,11 @@ const getDashboard = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
+    
+    if (req.user.role === 'ADMIN') {
+       return res.json({ full_name: 'Administrator', user_id: 'ADMIN-001', email: 'admin@e2solution.com', role: 'ADMIN', status: 'ACTIVE' });
+    }
+
     const [users] = await pool.query('SELECT full_name, user_id, email, role, status, plain_password FROM users WHERE id = ?', [userId]);
     if (users.length === 0) {
       return res.status(404).json({ message: 'User not found' });
@@ -68,6 +86,10 @@ const requestWithdrawal = async (req, res) => {
   try {
     const userId = req.user.id;
     const { amount, wallet } = req.body; // wallet: 'main', 'income', 'bonus'
+
+    if (req.user.role === 'ADMIN') {
+      return res.status(400).json({ message: 'Admin cannot request withdrawal' });
+    }
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
@@ -105,6 +127,8 @@ const requestWithdrawal = async (req, res) => {
 const getReferrals = async (req, res) => {
   try {
     const userId = req.user.id;
+    if (req.user.role === 'ADMIN') return res.json([]);
+    
     const [users] = await pool.query('SELECT user_id FROM users WHERE id = ?', [userId]);
     const userStrId = users[0].user_id;
 
@@ -140,12 +164,12 @@ const buildTree = async (user_id, currentDepth, maxDepth) => {
   };
 
   if (currentDepth < maxDepth) {
-    const sponsorIds = [user_id];
+    const parentIds = [user_id];
     if (user_id === 'BRIMLM-1000') {
-      sponsorIds.push('BMLM-1000');
-      sponsorIds.push('BRIMLM-100000');
+      parentIds.push('BMLM-1000');
+      parentIds.push('BRIMLM-100000');
     }
-    const [children] = await pool.query('SELECT user_id, placement FROM users WHERE sponsor_id IN (?)', [sponsorIds]);
+    const [children] = await pool.query('SELECT user_id, placement FROM users WHERE parent_id IN (?)', [parentIds]);
     const leftChild = children.find(c => c.placement === 'Left Side');
     const rightChild = children.find(c => c.placement === 'Right Side');
 
@@ -159,6 +183,8 @@ const buildTree = async (user_id, currentDepth, maxDepth) => {
 const getNetwork = async (req, res) => {
   try {
     const userId = req.user.id;
+    if (req.user.role === 'ADMIN') return res.json(null);
+    
     const [users] = await pool.query('SELECT user_id FROM users WHERE id = ?', [userId]);
     const userStrId = users[0].user_id;
 
@@ -175,6 +201,10 @@ const changePassword = async (req, res) => {
   try {
     const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
+
+    if (req.user.role === 'ADMIN') {
+      return res.status(400).json({ message: 'Cannot change admin password here' });
+    }
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: 'Current and new passwords are required' });
@@ -208,6 +238,8 @@ const changePassword = async (req, res) => {
 
 const getNotifications = async (req, res) => {
   try {
+    if (req.user.role === 'ADMIN') return res.json([]);
+    
     const [users] = await pool.query('SELECT user_id FROM users WHERE id = ?', [req.user.id]);
     if (users.length === 0) return res.status(404).json({ message: 'User not found' });
     const userStrId = users[0].user_id;
@@ -224,6 +256,8 @@ const getNotifications = async (req, res) => {
 
 const markNotificationsRead = async (req, res) => {
   try {
+    if (req.user.role === 'ADMIN') return res.json({ message: 'Notifications marked as read' });
+    
     const [users] = await pool.query('SELECT user_id FROM users WHERE id = ?', [req.user.id]);
     if (users.length === 0) return res.status(404).json({ message: 'User not found' });
     const userStrId = users[0].user_id;
@@ -277,13 +311,13 @@ const updatePlacement = async (req, res) => {
       let ancestorCheck = finalParentId;
       let isDescendant = false;
       for (let depth = 0; depth < 50; depth++) {
-        const [parentCheck] = await pool.query('SELECT sponsor_id FROM users WHERE user_id = ?', [ancestorCheck]);
-        if (parentCheck.length === 0 || !parentCheck[0].sponsor_id) break;
-        if (parentCheck[0].sponsor_id === operatorUserId) {
+        const [parentCheck] = await pool.query('SELECT parent_id, sponsor_id FROM users WHERE user_id = ?', [ancestorCheck]);
+        if (parentCheck.length === 0 || !parentCheck[0].parent_id) break;
+        if (parentCheck[0].parent_id === operatorUserId) {
           isDescendant = true;
           break;
         }
-        ancestorCheck = parentCheck[0].sponsor_id;
+        ancestorCheck = parentCheck[0].parent_id;
       }
       if (!isDescendant) {
         return res.status(400).json({ message: 'Target parent must be yourself or in your downline' });
@@ -291,14 +325,14 @@ const updatePlacement = async (req, res) => {
     }
 
     // 3. Verify target placement is unoccupied
-    const [occupied] = await pool.query('SELECT id FROM users WHERE sponsor_id = ? AND placement = ?', [finalParentId, placement]);
+    const [occupied] = await pool.query('SELECT id FROM users WHERE parent_id = ? AND placement = ?', [finalParentId, placement]);
     if (occupied.length > 0) {
       return res.status(400).json({ message: `The ${placement} under user ${finalParentId} is already occupied` });
     }
 
-    // 4. Update the placement and sponsor ID
+    // 4. Update the placement and parent ID
     await pool.query(
-      'UPDATE users SET placement = ?, sponsor_id = ? WHERE user_id = ?',
+      'UPDATE users SET placement = ?, parent_id = ? WHERE user_id = ?',
       [placement, finalParentId, id]
     );
 

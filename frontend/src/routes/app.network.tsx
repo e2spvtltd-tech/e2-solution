@@ -10,7 +10,7 @@ import api from "@/services/api";
 import { toastWithSound as toast } from "@/lib/toast-with-sound";
 
 export const Route = createFileRoute("/app/network")({
-  head: () => ({ meta: [{ title: "Network — E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Network - e2solution.in" }] }),
   component: NetworkPage,
 });
 

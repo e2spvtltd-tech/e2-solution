@@ -34,7 +34,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const token = localStorage.getItem('adminToken');
         const res = await api.get('/admin/dashboard', {
           headers: { Authorization: `Bearer ${token}` }
         });

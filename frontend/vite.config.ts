@@ -88,3 +88,4 @@ export default defineConfig({
     })
   ]
 });
+// Trigger dev server restart

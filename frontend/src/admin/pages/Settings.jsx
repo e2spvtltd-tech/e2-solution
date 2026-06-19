@@ -252,7 +252,7 @@ const Settings = () => {
       </div>
 
       <button className="btn logout-btn full-width-btn" onClick={() => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
         window.location.href = '/login';
       }}>
         <LogOut size={20} />

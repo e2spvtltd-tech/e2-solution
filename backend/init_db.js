@@ -18,15 +18,17 @@ async function initDB() {
         email VARCHAR(100) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         sponsor_id VARCHAR(50),
+        parent_id VARCHAR(50) NULL,
         user_id VARCHAR(50) UNIQUE,
         role ENUM('USER', 'ADMIN') DEFAULT 'USER',
         status ENUM('ACTIVE', 'PENDING KYC', 'INACTIVE') DEFAULT 'ACTIVE',
         placement ENUM('Left Side', 'Right Side', 'Pending') DEFAULT 'Pending',
-        volume DECIMAL(15,2) DEFAULT 0.00,
+        volume DECIMAL(15,2) DEFAULT 100000.00,
         team_size INT DEFAULT 0,
-        main_wallet DECIMAL(15,2) DEFAULT 0.00,
+        main_wallet DECIMAL(15,2) DEFAULT 100000.00,
         income_wallet DECIMAL(15,2) DEFAULT 0.00,
         bonus_wallet DECIMAL(15,2) DEFAULT 0.00,
+        plan_expiry_date DATE NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);

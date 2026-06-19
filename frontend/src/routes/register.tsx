@@ -6,7 +6,7 @@ import { AuthShell, Field } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/register")({
-  head: () => ({ meta: [{ title: "Create Account â€” E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Create Account - e2solution.in" }] }),
   component: RegisterPage,
 });
 

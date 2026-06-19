@@ -4,7 +4,7 @@ import { AuthShell, Field } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/forgot-password")({
-  head: () => ({ meta: [{ title: "Forgot Password â€” E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Forgot Password - e2solution.in" }] }),
   component: ForgotPage,
 });
 

@@ -23,6 +23,9 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/investments', investmentRoutes);
 
+// Initialize Cron Jobs
+require('./cron/roi.cron');
+
 // Basic Route
 app.get('/', (req, res) => {
   res.send('API is running...');

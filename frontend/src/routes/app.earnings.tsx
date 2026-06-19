@@ -8,7 +8,7 @@ import { TrendingUp, Calendar, CalendarDays, Wallet2 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 export const Route = createFileRoute("/app/earnings")({
-  head: () => ({ meta: [{ title: "Earnings — E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Earnings - e2solution.in" }] }),
   component: EarningsPage,
 });
 

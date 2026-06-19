@@ -11,27 +11,20 @@ const Reports = () => {
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/members');
+      const res = await api.get('/admin/reports');
       
-      const reportData = res.data.map((user, index) => {
-        const investment = 0; 
-        const binary = 0;
-        const dr = 0;
-        const total = 0;
-        const payout = 0;
-        const profit = 0;
-
+      const reportData = res.data.map((r, index) => {
         return {
           sno: index + 1,
-          idNo: user.id,
-          name: user.name,
-          mobile: user.mobile,
-          investment: investment,
-          binary: binary,
-          dr: dr,
-          total: total,
-          payout: payout,
-          profit: profit
+          idNo: r.idNo,
+          name: r.name,
+          mobile: r.mobile,
+          investment: r.investment,
+          binary: r.binary,
+          dr: r.dr,
+          total: r.total,
+          payout: r.payout,
+          profit: r.profit
         };
       });
 

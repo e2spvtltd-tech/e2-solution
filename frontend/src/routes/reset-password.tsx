@@ -4,7 +4,7 @@ import { AuthShell, Field } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset Password â€” E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Reset Password - e2solution.in" }] }),
   component: ResetPage,
 });
 

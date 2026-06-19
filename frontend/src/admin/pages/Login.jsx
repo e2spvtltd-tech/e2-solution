@@ -24,7 +24,7 @@ const Login = ({ onLogin }) => {
     try {
       // Authenticate using the real API
       const res = await api.post('/auth/login', { emailOrId: email, password });
-      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('adminToken', res.data.token);
       playNotificationSound();
       toast.success('Welcome back!');
       onLogin();

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import api from "@/services/api";
 
 export const Route = createFileRoute("/app/wallet")({
-  head: () => ({ meta: [{ title: "Wallet — E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Wallet - e2solution.in" }] }),
   component: WalletPage,
 });
 
@@ -160,7 +160,7 @@ function WalletPage() {
           <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft min-h-[50vh]">
             <p className="mb-4 text-sm md:text-base font-bold text-foreground">Recent Transactions</p>
             <ul className="divide-y divide-border">
-              {[].map((tx) => (
+              {([] as any[]).map((tx) => (
                 <li key={tx.id} className="flex items-center gap-3 py-3 md:py-4">
                   <div className={cn(
                     "grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-xl",
@@ -225,7 +225,7 @@ function WalletPage() {
               <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft h-full">
                 <h3 className="font-bold text-lg mb-4">Withdrawal History</h3>
                 <ul className="divide-y divide-border">
-                  {[].map((w) => (
+                  {([] as any[]).map((w) => (
                     <li key={w.id} className="py-3 md:py-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-bold">{w.date}</span>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, MoreVertical, Edit, ShieldBan, CheckCircle, Eye } from 'lucide-react';
+import { Search, Filter, Edit, ShieldBan, CheckCircle, Eye, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
 const UserManagement = () => {
@@ -9,6 +9,7 @@ const UserManagement = () => {
   const [placementModal, setPlacementModal] = useState({ open: false, userId: null, currentPlacement: '' });
   const [newPlacement, setNewPlacement] = useState('Left Side');
   const [parentInput, setParentInput] = useState('');
+  const [editModal, setEditModal] = useState({ open: false, userId: null, name: '', mobile: '' });
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -36,6 +37,39 @@ const UserManagement = () => {
     } catch (error) {
       console.error('Failed to update placement', error);
       alert(error.response?.data?.message || 'Failed to update placement');
+    }
+  };
+
+  const handleEditUser = async () => {
+    try {
+      await api.put(`/admin/members/${editModal.userId}`, {
+        full_name: editModal.name,
+        mobile: editModal.mobile
+      });
+      setEditModal({ open: false, userId: null, name: '', mobile: '' });
+      fetchUsers();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to update user');
+    }
+  };
+
+  const handleToggleStatus = async (userId) => {
+    if (!window.confirm('Are you sure you want to change this user\'s status?')) return;
+    try {
+      await api.put(`/admin/members/${userId}/status`);
+      fetchUsers();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to update user status');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you absolutely sure you want to completely delete this user? This action cannot be undone!')) return;
+    try {
+      await api.delete(`/admin/members/${userId}`);
+      fetchUsers();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -113,12 +147,13 @@ const UserManagement = () => {
                         </button>
                       )}
                       <Link to={`/user-profile/${user.id}`} title="View Profile" style={{ color: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Eye size={18} /></Link>
-                      <span title="Edit" style={{ color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Edit size={18} /></span>
+                      <span onClick={() => setEditModal({ open: true, userId: user.id, name: user.name, mobile: user.mobile })} title="Edit" style={{ color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Edit size={18} /></span>
                       {user.status === 'Active' ? (
-                        <span title="Block User" style={{ color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ShieldBan size={18} /></span>
+                        <span onClick={() => handleToggleStatus(user.id)} title="Block User" style={{ color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ShieldBan size={18} /></span>
                       ) : (
-                        <span title="Activate User" style={{ color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><CheckCircle size={18} /></span>
+                        <span onClick={() => handleToggleStatus(user.id)} title="Activate User" style={{ color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><CheckCircle size={18} /></span>
                       )}
+                      <span onClick={() => handleDeleteUser(user.id)} title="Delete User" style={{ color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '4px' }}><Trash2 size={18} /></span>
                     </div>
                   </td>
                 </tr>
@@ -155,6 +190,35 @@ const UserManagement = () => {
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button onClick={() => setPlacementModal({ open: false, userId: null, currentPlacement: '' })} className="btn btn-outline" style={{ padding: '8px 16px', borderRadius: '8px' }}>Cancel</button>
               <button onClick={handleUpdatePlacement} className="btn btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>Save Placement</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editModal.open && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '400px' }}>
+            <h2 style={{ marginBottom: '16px', fontSize: '1.25rem', fontWeight: 'bold' }}>Edit User</h2>
+            
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600 }}>Full Name</label>
+            <input 
+              type="text" 
+              value={editModal.name} 
+              onChange={(e) => setEditModal({...editModal, name: e.target.value})}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '16px', backgroundColor: 'var(--color-bg)', outline: 'none' }}
+            />
+
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600 }}>Mobile</label>
+            <input 
+              type="text" 
+              value={editModal.mobile} 
+              onChange={(e) => setEditModal({...editModal, mobile: e.target.value})}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '24px', backgroundColor: 'var(--color-bg)', outline: 'none' }}
+            />
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setEditModal({ open: false, userId: null, name: '', mobile: '' })} className="btn btn-outline" style={{ padding: '8px 16px', borderRadius: '8px' }}>Cancel</button>
+              <button onClick={handleEditUser} className="btn btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>Save Changes</button>
             </div>
           </div>
         </div>

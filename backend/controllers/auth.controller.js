@@ -25,11 +25,17 @@ const registerUser = async (req, res) => {
     const userIdStr = 'BRIMLM-' + Math.floor(100000 + Math.random() * 900000);
 
     const [result] = await pool.query(
-      'INSERT INTO users (full_name, mobile, email, password, plain_password, sponsor_id, placement, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [fullName, mobile, email, hashedPassword, password, targetSponsorId, placement || 'Pending', userIdStr]
+      'INSERT INTO users (full_name, mobile, email, password, plain_password, sponsor_id, placement, user_id, main_wallet, volume, plan_expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(CURDATE(), INTERVAL 100 DAY))',
+      [fullName, mobile, email, hashedPassword, password, targetSponsorId, placement || 'Pending', userIdStr, 100000.00, 100000.00]
     );
 
     const newUserId = result.insertId;
+
+    // Add initial investment transaction
+    await pool.query(
+      "INSERT INTO transactions (user_id, title, subtitle, amount, type, status, created_at) VALUES (?, 'Initial Investment', 'Sign-up Bonus', 100000.00, 'deposit', 'COMPLETED', NOW())",
+      [newUserId]
+    );
 
     // Notify Sponsor
     await pool.query(

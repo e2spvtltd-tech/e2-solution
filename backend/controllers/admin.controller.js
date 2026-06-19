@@ -36,14 +36,14 @@ const getDashboardStats = async (req, res) => {
     res.json({
       activeUsers: activeUsersResult[0].count,
       totalUsers: usersResult[0].count,
-      totalInvestments: revenueResult[0].total || 0,
+      totalInvestments: parseFloat(revenueResult[0].total || 0),
       activeInvestments: 0, // Zeroed out demo data
-      pendingWithdrawals: Math.abs(withdrawalsResult[0].total || 0),
+      pendingWithdrawals: parseFloat(Math.abs(withdrawalsResult[0].total || 0)),
       todayJoinings: 0, // Zeroed out demo data
-      todayROI: roiResult[0].total || 0,
-      todayBinary: binaryResult[0].total || 0,
-      todayReferral: refResult[0].total || 0,
-      totalRevenue: revenueResult[0].total || 0,
+      todayROI: parseFloat(roiResult[0].total || 0),
+      todayBinary: parseFloat(binaryResult[0].total || 0),
+      todayReferral: parseFloat(refResult[0].total || 0),
+      totalRevenue: parseFloat(revenueResult[0].total || 0),
       recentActivity: recentActivity.map(a => ({
         id: a.id,
         title: a.title,
@@ -237,14 +237,14 @@ const updatePlacement = async (req, res) => {
     const parent = parents[0];
 
     // 3. Verify that the position is not already occupied
-    const [occupied] = await pool.query('SELECT id FROM users WHERE sponsor_id = ? AND placement = ?', [finalParentId, placement]);
+    const [occupied] = await pool.query('SELECT id FROM users WHERE parent_id = ? AND placement = ?', [finalParentId, placement]);
     if (occupied.length > 0) {
       return res.status(400).json({ message: `The ${placement} under user ${finalParentId} is already occupied` });
     }
 
-    // 4. Update the placement and sponsor ID
+    // 4. Update the placement and parent ID
     await pool.query(
-      'UPDATE users SET placement = ?, sponsor_id = ? WHERE user_id = ?',
+      'UPDATE users SET placement = ?, parent_id = ? WHERE user_id = ?',
       [placement, finalParentId, id]
     );
 
@@ -282,4 +282,79 @@ const getAdminProfile = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardStats, getMembers, getMemberById, getTransactions, getNotifications, markNotificationsRead, getNetwork, updatePlacement, getAdminProfile };
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { full_name, mobile } = req.body;
+  try {
+    await pool.query(
+      'UPDATE users SET full_name = ?, mobile = ? WHERE user_id = ?',
+      [full_name, mobile, id]
+    );
+    res.json({ message: 'User updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const toggleUserStatus = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [users] = await pool.query('SELECT status FROM users WHERE user_id = ?', [id]);
+    if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+    const newStatus = users[0].status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    await pool.query('UPDATE users SET status = ? WHERE user_id = ?', [newStatus, id]);
+    res.json({ message: 'User status updated successfully', status: newStatus });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [users] = await pool.query('SELECT id FROM users WHERE user_id = ?', [id]);
+    if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+    
+    await pool.query('DELETE FROM users WHERE user_id = ?', [id]);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getReports = async (req, res) => {
+  try {
+    const [reports] = await pool.query(`
+      SELECT 
+        u.user_id as idNo, 
+        u.full_name as name, 
+        u.mobile, 
+        u.volume as investment,
+        COALESCE(SUM(CASE WHEN t.type = 'binary' AND t.status = 'COMPLETED' THEN t.amount ELSE 0 END), 0) as binaryIncome,
+        COALESCE(SUM(CASE WHEN t.type = 'referral' AND t.status = 'COMPLETED' THEN t.amount ELSE 0 END), 0) as drIncome,
+        COALESCE(SUM(CASE WHEN t.type IN ('roi', 'binary', 'referral') AND t.status = 'COMPLETED' THEN t.amount ELSE 0 END), 0) as totalIncome,
+        COALESCE(SUM(CASE WHEN t.type = 'withdrawal' AND t.status = 'COMPLETED' THEN ABS(t.amount) ELSE 0 END), 0) as payout
+      FROM users u
+      LEFT JOIN transactions t ON u.id = t.user_id
+      WHERE u.role = 'USER'
+      GROUP BY u.id
+      ORDER BY u.created_at DESC
+    `);
+
+    res.json(reports.map(r => ({
+      idNo: r.idNo,
+      name: r.name,
+      mobile: r.mobile,
+      investment: parseFloat(r.investment || 0),
+      binary: parseFloat(r.binaryIncome || 0),
+      dr: parseFloat(r.drIncome || 0),
+      total: parseFloat(r.totalIncome || 0),
+      payout: parseFloat(r.payout || 0),
+      profit: parseFloat(r.totalIncome || 0) - parseFloat(r.payout || 0)
+    })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getDashboardStats, getMembers, getMemberById, getTransactions, getNotifications, markNotificationsRead, getNetwork, updatePlacement, getAdminProfile, updateUser, toggleUserStatus, deleteUser, getReports };

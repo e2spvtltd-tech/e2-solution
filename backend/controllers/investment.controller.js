@@ -64,4 +64,48 @@ const createInvestment = async (req, res) => {
   }
 };
 
-module.exports = { createInvestment };
+const renewPlan = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    try {
+      const [users] = await conn.query('SELECT volume, main_wallet FROM users WHERE id = ?', [userId]);
+      if (users.length === 0) throw new Error('User not found');
+      const user = users[0];
+
+      const renewalCost = parseFloat(user.volume || 100000);
+
+      if (parseFloat(user.main_wallet) < renewalCost) {
+        throw new Error(`Insufficient main wallet balance. Renewal costs ₹${renewalCost}`);
+      }
+
+      // Deduct from main_wallet and extend plan_expiry_date
+      await conn.query(
+        "UPDATE users SET main_wallet = main_wallet - ?, plan_expiry_date = DATE_ADD(CURDATE(), INTERVAL 100 DAY) WHERE id = ?",
+        [renewalCost, userId]
+      );
+
+      // Record renewal transaction
+      await conn.query(
+        "INSERT INTO transactions (user_id, title, subtitle, amount, type, status, created_at) VALUES (?, 'Plan Renewal', '100-Day Extension', ?, 'deposit', 'COMPLETED', NOW())",
+        [userId, renewalCost]
+      );
+
+      await conn.commit();
+      conn.release();
+
+      res.json({ message: 'Plan successfully renewed for 100 days!' });
+    } catch (error) {
+      await conn.rollback();
+      conn.release();
+      throw error;
+    }
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { createInvestment, renewPlan };

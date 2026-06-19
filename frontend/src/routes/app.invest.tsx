@@ -8,7 +8,7 @@ import { inr, packages, type Pkg } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/invest")({
-  head: () => ({ meta: [{ title: "Investments — E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Investments - e2solution.in" }] }),
   component: InvestPage,
 });
 

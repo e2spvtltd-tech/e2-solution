@@ -24,7 +24,7 @@ import { inr, growthSeries } from "@/lib/mock-data";
 import api from "@/services/api";
 
 export const Route = createFileRoute("/app/")({
-  head: () => ({ meta: [{ title: "Dashboard — E2 Solutions" }] }),
+  head: () => ({ meta: [{ title: "Dashboard - e2solution.in" }] }),
   component: Dashboard,
 });
 
@@ -84,9 +84,9 @@ function Dashboard() {
         const res = await api.get('/user/dashboard');
         return res.data;
       } catch (err: any) {
-        // Only clear token and redirect on 401 (unauthorized/expired token)
+        // Only clear token and redirect on 401 (unauthorized) or 404 (user deleted)
         // Don't clear on network errors or other failures
-        if (err.response?.status === 401) {
+        if (err.response?.status === 401 || err.response?.status === 404) {
           localStorage.removeItem('token');
           navigate({ to: '/login' });
         }
@@ -97,6 +97,17 @@ function Dashboard() {
     staleTime: 10000, // Keep data fresh for 10 seconds
     retry: 2, // Retry failed requests twice before giving up
   });
+
+  const handleRenew = async () => {
+    if (!window.confirm("Renewing your plan will deduct your original investment amount from your main wallet to extend your daily ROI for another 100 days. Do you want to proceed?")) return;
+    try {
+      const res = await api.post('/investments/renew');
+      alert(res.data.message);
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to renew plan. Please ensure you have sufficient balance in your Main Wallet.");
+    }
+  };
 
   if (loading || !data) return <div className="p-4 text-center">Loading dashboard...</div>;
 
@@ -111,11 +122,16 @@ function Dashboard() {
             <p className="text-xs md:text-sm font-medium uppercase tracking-wide text-primary-foreground/70">
               Total Portfolio Value
             </p>
-            <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-[11px] md:text-xs font-semibold">
-              0%
-            </span>
+            <div className="flex gap-2">
+              <button onClick={handleRenew} className="rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 transition-colors px-3 py-0.5 text-[11px] md:text-xs font-semibold cursor-pointer">
+                Renew Plan
+              </button>
+              <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-[11px] md:text-xs font-semibold">
+                0%
+              </span>
+            </div>
           </div>
-          <p className="mt-1 text-3xl md:text-5xl font-extrabold tracking-tight">{inr(data.totalEarnings + data.walletBalance)}</p>
+          <p className="mt-1 text-3xl md:text-5xl font-extrabold tracking-tight">{inr(Number(data.totalEarnings || 0) + Number(data.walletBalance || 0))}</p>
           <div className="mt-4 md:mt-6 flex items-center justify-between rounded-2xl bg-primary-foreground/10 px-4 md:px-6 py-2.5 md:py-4 text-sm md:text-base">
             <span className="text-primary-foreground/80">Pending Volume</span>
             <span className="font-bold">{inr(0)}</span>
