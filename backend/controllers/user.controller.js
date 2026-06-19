@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { calculateAndPayBinaryBonus } = require('../utils/binary');
 
 const getDashboard = async (req, res) => {
   try {
@@ -346,6 +347,9 @@ const updatePlacement = async (req, res) => {
       "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', 'BRIMLM-1000')",
       [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`]
     );
+
+    // Trigger Binary Matching Bonus evaluation for the upline
+    calculateAndPayBinaryBonus(id);
 
     res.json({ message: 'User placed successfully' });
   } catch (error) {

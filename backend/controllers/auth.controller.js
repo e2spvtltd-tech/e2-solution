@@ -37,7 +37,31 @@ const registerUser = async (req, res) => {
       [newUserId]
     );
 
-    // Notify Sponsor
+    // Calculate 5% Referral Bonus for Initial Investment (100000.00)
+    const initialAmount = 100000.00;
+    const bonus = initialAmount * 0.05;
+    
+    // Find sponsor
+    const [sponsors] = await pool.query('SELECT id, role, email FROM users WHERE user_id = ?', [targetSponsorId]);
+    if (sponsors.length > 0) {
+      const sponsor = sponsors[0];
+      // Credit Sponsor's income wallet
+      await pool.query("UPDATE users SET income_wallet = income_wallet + ? WHERE id = ?", [bonus, sponsor.id]);
+      
+      // Record the referral transaction for the sponsor (proof)
+      await pool.query(
+        "INSERT INTO transactions (user_id, title, subtitle, amount, type, status, created_at) VALUES (?, 'Direct Referral Bonus', ?, ?, 'referral', 'COMPLETED', NOW())",
+        [sponsor.id, `5% from new user ${fullName} (${userIdStr})`, bonus]
+      );
+      
+      // Notify Sponsor
+      await pool.query(
+        "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', ?)",
+        [`You received a 5% referral bonus (₹${bonus}) from new user ${fullName}'s initial investment.`, targetSponsorId]
+      );
+    }
+
+    // Notify Sponsor (Registration event)
     await pool.query(
       "INSERT INTO notifications (message, type, user_id) VALUES (?, 'registration', ?)",
       [`New user registered: ${fullName} (${userIdStr}) under your referral.`, targetSponsorId]

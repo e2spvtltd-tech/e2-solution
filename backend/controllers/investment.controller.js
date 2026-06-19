@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { calculateAndPayBinaryBonus } = require('../utils/binary');
 
 const createInvestment = async (req, res) => {
   const { amount } = req.body;
@@ -39,7 +40,7 @@ const createInvestment = async (req, res) => {
           // Record the referral transaction for the sponsor
           await conn.query(
             "INSERT INTO transactions (user_id, title, subtitle, amount, type, status, created_at) VALUES (?, 'Direct Referral Bonus', ?, ?, 'referral', 'COMPLETED', NOW())",
-            [sponsor.id, `From ${user.full_name}`, bonus]
+            [sponsor.id, `5% from ${user.full_name} (${user.user_id})`, bonus]
           );
 
           // Notify Sponsor
@@ -52,6 +53,9 @@ const createInvestment = async (req, res) => {
 
       await conn.commit();
       conn.release();
+
+      // Trigger Binary Matching Bonus evaluation for the upline asynchronously
+      calculateAndPayBinaryBonus(user.user_id);
 
       res.status(201).json({ message: 'Investment created successfully. Referral bonuses distributed if applicable.' });
     } catch (error) {
