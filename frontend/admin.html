@@ -12,10 +12,16 @@
       const originalFetch = window.fetch;
       window.fetch = async function(...args) {
         let url = '';
-        if (typeof args[0] === 'string') {
-          url = args[0];
-        } else if (args[0] && args[0].url) {
-          url = args[0].url;
+        if (args[0]) {
+          if (typeof args[0] === 'string') {
+            url = args[0];
+          } else if (args[0] instanceof URL) {
+            url = args[0].href;
+          } else if (args[0].url) {
+            url = args[0].url;
+          } else {
+            url = String(args[0]);
+          }
         }
         if (url && url.includes('useblackbox.io')) {
           return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -23,12 +29,37 @@
         return originalFetch.apply(this, args);
       };
 
+      // Intercept Request constructor in case they use new Request()
+      const OriginalRequest = window.Request;
+      window.Request = function(input, options) {
+        let url = '';
+        if (input) {
+          if (typeof input === 'string') {
+            url = input;
+          } else if (input instanceof URL) {
+            url = input.href;
+          } else if (input.url) {
+            url = input.url;
+          } else {
+            url = String(input);
+          }
+        }
+        if (url && url.includes('useblackbox.io')) {
+          input = 'about:blank';
+        }
+        return new OriginalRequest(input, options);
+      };
+
       // Suppress the "Uncaught (in promise) TypeError: Failed to fetch" from the extension
       window.addEventListener('unhandledrejection', function(event) {
-        if (event.reason && event.reason.message === 'Failed to fetch') {
-          const stack = event.reason.stack || '';
-          if (stack.includes('index.iife.js') || stack.includes('useblackbox.io')) {
+        const reasonStr = event.reason ? String(event.reason) : '';
+        const reasonMsg = (event.reason && event.reason.message) ? String(event.reason.message) : '';
+        const stack = (event.reason && event.reason.stack) ? String(event.reason.stack) : '';
+        
+        if (reasonStr.includes('Failed to fetch') || reasonMsg.includes('Failed to fetch')) {
+          if (stack.includes('index.iife.js') || stack.includes('useblackbox') || reasonStr.includes('useblackbox') || reasonMsg.includes('useblackbox')) {
             event.preventDefault();
+            event.stopPropagation();
           }
         }
       });
@@ -36,7 +67,13 @@
       // Also intercept console.error for this specific error just in case
       const originalConsoleError = console.error;
       console.error = function(...args) {
-        if (typeof args[0] === 'string' && args[0].includes('useblackbox.io')) {
+        const message = args.map(arg => {
+          if (arg && arg.message) return arg.message;
+          if (arg && arg.stack) return arg.stack;
+          return String(arg);
+        }).join(' ');
+
+        if (message.includes('useblackbox') || message.includes('index.iife.js')) {
           return;
         }
         return originalConsoleError.apply(console, args);
