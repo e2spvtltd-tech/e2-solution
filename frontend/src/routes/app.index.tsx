@@ -115,7 +115,7 @@ function Dashboard() {
     <div className="no-scrollbar">
       <AppHeader />
 
-      <div className="space-y-4 px-4 pt-4 pb-20 md:space-y-6 md:p-8 md:pb-24 mx-auto max-w-7xl">
+      <div className="space-y-4 px-4 pt-8 pb-20 md:space-y-6 md:p-8 md:pt-12 md:pb-24 mx-auto max-w-7xl">
         {/* Portfolio hero */}
         <section className="overflow-hidden rounded-3xl bg-gradient-hero p-5 md:p-8 text-primary-foreground shadow-glow">
           <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ function Dashboard() {
         </section>
 
         <div className="md:grid md:grid-cols-12 md:gap-6 space-y-4 md:space-y-0">
-          <div className="md:col-span-8 space-y-4 md:space-y-6">
+          <div className="md:col-span-12 space-y-4 md:space-y-6">
             {/* Stat grid */}
             <section className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3">
               <StatCard icon={TrendingUp} label="Total Earnings" value={inr(data.totalEarnings || 0)} delta="0%" tone="primary" />
@@ -151,26 +151,7 @@ function Dashboard() {
             </section>
           </div>
 
-          <div className="md:col-span-4 space-y-4 md:space-y-6">
-            {/* Quick actions */}
-            <section className="grid grid-cols-3 gap-2 md:gap-4">
-              {[
-                { icon: Plus, label: "Invest Now", to: "/app/invest" },
-                { icon: Users, label: "Binary Tree", to: "/app/network" },
-                { icon: Gift, label: "Referral Link", to: "/app/network" },
-                { icon: ArrowUpRight, label: "Withdraw", to: "/app/wallet" },
-                { icon: Wallet2, label: "Support", to: "/app/profile" },
-                { icon: Repeat, label: "KYC", to: "/app/profile" },
-              ].map(({ icon: Icon, label, to }) => (
-                <Link key={label} to={to} className="flex flex-col items-center gap-1.5 md:gap-2">
-                  <span className="grid h-12 w-12 md:h-14 md:w-14 place-items-center rounded-2xl bg-card text-primary shadow-soft hover:shadow-md transition-shadow">
-                    <Icon className="h-5 w-5 md:h-6 md:w-6" />
-                  </span>
-                  <span className="text-[11px] md:text-sm font-medium text-muted-foreground text-center">{label}</span>
-                </Link>
-              ))}
-            </section>
-          </div>
+
 
           <div className="md:col-span-12 space-y-4 md:space-y-6 mt-4 md:mt-0">
             {/* Growth analytics */}

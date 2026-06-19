@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,112 +18,91 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    const intervalId = setInterval(() => {
-      // Only scroll if we have horizontal overflow (mobile)
-      if (scrollContainer.scrollWidth <= scrollContainer.clientWidth) return;
-
-      const isAtEnd = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 10;
-
-      if (isAtEnd) {
-        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        // Scroll by roughly one card width (85vw) + gap
-        scrollContainer.scrollBy({ left: window.innerWidth * 0.85 + 16, behavior: 'smooth' });
-      }
-    }, 3000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
   return (
-    <div className="relative mx-auto w-full min-h-[100dvh] bg-background overflow-x-hidden flex flex-col pb-4 md:pb-12">
+    <div className="relative mx-auto w-full min-h-screen md:h-screen bg-background text-foreground overflow-hidden flex flex-col justify-between p-6 md:p-8 lg:p-10 font-sans">
       {/* Decorative background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[300px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-      {/* Nav */}
-      <header className="flex items-center justify-between px-5 py-4 lg:py-6 max-w-6xl mx-auto w-full relative z-10 shrink-0">
-        <Logo />
-        <Button asChild size="sm" variant="hero" className="rounded-full px-6 md:px-8 min-h-[44px] min-w-[44px]">
-          <Link to="/login">Sign In</Link>
-        </Button>
+      {/* Nav - Placed somewhat down using padding-top */}
+      <header className="flex items-center justify-center pt-8 md:pt-14 relative z-10 shrink-0">
+        <Logo layout="vertical" size="xl" />
       </header>
 
-      {/* Hero */}
-      <section className="px-5 text-center max-w-6xl mx-auto w-full flex-1 flex flex-col relative z-10">
+      {/* Hero Section - Space is loosened slightly */}
+      <section className="px-4 text-center max-w-3xl mx-auto w-full relative z-10 mt-4 md:mt-6 flex flex-col items-center">
+        
+        {/* Badge */}
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/80 backdrop-blur-sm border border-primary/20 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm select-none">
+          <ShieldCheck className="h-4 w-4 text-primary" /> Institutional-grade Platform
+        </span>
 
-        {/* Main Text Content - Centered */}
-        <div className="flex-1 flex flex-col justify-center items-center w-full py-8 md:py-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/80 backdrop-blur-sm border border-primary/20 px-4 py-1.5 text-xs md:text-sm font-semibold text-primary shadow-sm">
-            <ShieldCheck className="h-4 w-4" /> Institutional-grade Platform
-          </span>
+        {/* Heading */}
+        <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-[4rem] font-extrabold leading-[1.15] tracking-tight text-foreground">
+          Build Your Future.
+          <br />
+          <span className="bg-gradient-primary bg-clip-text text-transparent">Start Earning Now.</span>
+        </h1>
 
-          <h1 className="mt-6 md:mt-8 text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-extrabold leading-tight tracking-tight text-foreground">
-            Build Your Future.
-            <br />
-            <span className="bg-gradient-primary bg-clip-text text-transparent">Start Earning Now.</span>
-          </h1>
+        {/* Subtext */}
+        <p className="mt-4 text-xs sm:text-sm md:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          An invitation-only, institutional-grade binary network investment platform. Contact your sponsor to get registered directly inside the binary tree and start earning daily returns.
+        </p>
 
-          <p className="mt-4 md:mt-6 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            A smart platform for investment growth, binary networking, and financial rewards. Secure your
-            financial future today with our automated ROI system.
-          </p>
-
-          <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-center w-full sm:w-auto">
-            <Button asChild variant="hero" className="rounded-full px-8 md:px-12 h-14 md:h-16 text-base md:text-lg shadow-glow w-full sm:w-auto font-bold transition-transform hover:scale-105">
-              <Link to="/register">
-                Get Started Now <ArrowRight className="ml-2 h-5 w-5 md:h-6 md:w-6" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Feature Cards replacing the image - Anchored to bottom */}
-        <div className="w-full mt-auto md:mt-8 lg:mt-12">
-          <div
-            ref={scrollRef}
-            className="flex md:grid md:grid-cols-3 gap-4 md:gap-8 text-left w-[100vw] md:w-full overflow-x-auto snap-x snap-mandatory no-scrollbar pt-2 px-6 md:px-0 -mx-5 md:mx-0 scroll-smooth"
-          >
-            <div className="w-[80vw] max-w-[320px] shrink-0 snap-center md:w-auto md:max-w-none bg-card/60 backdrop-blur-xl p-6 md:p-8 lg:p-10 rounded-3xl shadow-soft border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-card hover:-translate-y-1 whitespace-normal break-words">
-              <div className="h-12 w-12 md:h-14 md:w-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4 md:mb-5">
-                <TrendingUp className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-              </div>
-              <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-foreground">Daily Returns</h3>
-              <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3 leading-relaxed">
-                Earn consistent daily ROI on your active investment packages with automated payouts directly to your wallet.
-              </p>
-            </div>
-
-            <div className="w-[80vw] max-w-[320px] shrink-0 snap-center md:w-auto md:max-w-none bg-card/60 backdrop-blur-xl p-6 md:p-8 lg:p-10 rounded-3xl shadow-soft border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-card hover:-translate-y-1 whitespace-normal break-words">
-              <div className="h-12 w-12 md:h-14 md:w-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4 md:mb-5">
-                <Users className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-              </div>
-              <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-foreground">Binary Network</h3>
-              <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3 leading-relaxed">
-                Build your team and earn lucrative binary matching bonuses from your weaker leg volume every single day.
-              </p>
-            </div>
-
-            <div className="w-[80vw] max-w-[320px] shrink-0 snap-center md:w-auto md:max-w-none bg-card/60 backdrop-blur-xl p-6 md:p-8 lg:p-10 rounded-3xl shadow-soft border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-card hover:-translate-y-1 whitespace-normal break-words">
-              <div className="h-12 w-12 md:h-14 md:w-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4 md:mb-5">
-                <ShieldCheck className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-              </div>
-              <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-foreground">Secure System</h3>
-              <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3 leading-relaxed">
-                Enterprise-grade security architecture protecting your assets and personal data with end-to-end encryption.
-              </p>
-            </div>
-
-            {/* Spacer to ensure the last card isn't cut off on the right edge on mobile */}
-            <div className="w-2 shrink-0 md:hidden"></div>
-          </div>
+        {/* Action Button */}
+        <div className="mt-6 flex justify-center w-full">
+          <Button asChild variant="hero" className="rounded-full px-12 h-12 md:h-14 text-sm md:text-base shadow-glow w-fit font-bold transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center">
+            <Link to="/login">
+              Sign In <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Button>
         </div>
       </section>
+
+      {/* Feature Cards - Statically aligned close to the CTA with a clean gap */}
+      <div className="w-full mt-8 md:mt-12 shrink-0 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left w-full max-w-6xl mx-auto">
+          
+          {/* Card 1 */}
+          <div className="bg-card/70 backdrop-blur-xl p-4 md:p-6 rounded-2xl border border-border/60 hover:border-primary/20 transition-all duration-300 shadow-[0_10px_30px_rgba(91,61,245,0.06)] hover:shadow-[0_15px_35px_rgba(91,61,245,0.12)] hover:-translate-y-0.5 flex items-start gap-4 group">
+            <div className="h-10 w-10 md:h-12 md:w-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110">
+              <TrendingUp className="h-5.5 w-5.5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm md:text-base lg:text-lg font-bold text-foreground">Daily Returns</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                Earn consistent daily ROI on active packages with automated payouts to your wallet.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="bg-card/70 backdrop-blur-xl p-4 md:p-6 rounded-2xl border border-border/60 hover:border-primary/20 transition-all duration-300 shadow-[0_10px_30px_rgba(91,61,245,0.06)] hover:shadow-[0_15px_35px_rgba(91,61,245,0.12)] hover:-translate-y-0.5 flex items-start gap-4 group">
+            <div className="h-10 w-10 md:h-12 md:w-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110">
+              <Users className="h-5.5 w-5.5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm md:text-base lg:text-lg font-bold text-foreground">Binary Network</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                Build your team and earn lucrative binary matching bonuses from weaker leg volume.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-card/70 backdrop-blur-xl p-4 md:p-6 rounded-2xl border border-border/60 hover:border-primary/20 transition-all duration-300 shadow-[0_10px_30px_rgba(91,61,245,0.06)] hover:shadow-[0_15px_35px_rgba(91,61,245,0.12)] hover:-translate-y-0.5 flex items-start gap-4 group">
+            <div className="h-10 w-10 md:h-12 md:w-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110">
+              <ShieldCheck className="h-5.5 w-5.5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm md:text-base lg:text-lg font-bold text-foreground">Secure System</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                Enterprise-grade security protecting your assets with end-to-end encryption.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }

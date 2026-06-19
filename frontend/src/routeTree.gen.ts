@@ -17,7 +17,6 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppWalletRouteImport } from './routes/app.wallet'
 import { Route as AppTransactionsRouteImport } from './routes/app.transactions'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppNetworkRouteImport } from './routes/app.network'
@@ -65,11 +64,6 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppWalletRoute = AppWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppTransactionsRoute = AppTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -115,7 +109,6 @@ export interface FileRoutesByFullPath {
   '/app/network': typeof AppNetworkRoute
   '/app/profile': typeof AppProfileRoute
   '/app/transactions': typeof AppTransactionsRoute
-  '/app/wallet': typeof AppWalletRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -131,7 +124,6 @@ export interface FileRoutesByTo {
   '/app/network': typeof AppNetworkRoute
   '/app/profile': typeof AppProfileRoute
   '/app/transactions': typeof AppTransactionsRoute
-  '/app/wallet': typeof AppWalletRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -149,7 +141,6 @@ export interface FileRoutesById {
   '/app/network': typeof AppNetworkRoute
   '/app/profile': typeof AppProfileRoute
   '/app/transactions': typeof AppTransactionsRoute
-  '/app/wallet': typeof AppWalletRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -168,7 +159,6 @@ export interface FileRouteTypes {
     | '/app/network'
     | '/app/profile'
     | '/app/transactions'
-    | '/app/wallet'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -184,7 +174,6 @@ export interface FileRouteTypes {
     | '/app/network'
     | '/app/profile'
     | '/app/transactions'
-    | '/app/wallet'
     | '/app'
   id:
     | '__root__'
@@ -201,7 +190,6 @@ export interface FileRouteTypes {
     | '/app/network'
     | '/app/profile'
     | '/app/transactions'
-    | '/app/wallet'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -274,13 +262,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/wallet': {
-      id: '/app/wallet'
-      path: '/wallet'
-      fullPath: '/app/wallet'
-      preLoaderRoute: typeof AppWalletRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/transactions': {
       id: '/app/transactions'
       path: '/transactions'
@@ -332,7 +313,6 @@ interface AppRouteChildren {
   AppNetworkRoute: typeof AppNetworkRoute
   AppProfileRoute: typeof AppProfileRoute
   AppTransactionsRoute: typeof AppTransactionsRoute
-  AppWalletRoute: typeof AppWalletRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -342,7 +322,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppNetworkRoute: AppNetworkRoute,
   AppProfileRoute: AppProfileRoute,
   AppTransactionsRoute: AppTransactionsRoute,
-  AppWalletRoute: AppWalletRoute,
   AppIndexRoute: AppIndexRoute,
 }
 

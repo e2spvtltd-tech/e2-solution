@@ -130,12 +130,12 @@ function LoginPage() {
             </div>
 
             <div className="mt-8 text-center flex flex-col gap-2">
-               <div className="text-[12px]" style={{ color: '#64748b', fontSize: '12px', marginTop: '20px' }}>
-                 Don't have an account? <Link to="/register" className="font-semibold hover:underline" style={{ color: '#6d28d9', fontWeight: 600, marginLeft: '4px', textDecoration: 'none' }}>Sign up</Link>
-               </div>
-               <p className="text-[11px]" style={{ marginTop: '10px', fontSize: '11px', color: '#94a3b8' }}>
-                 © 2024 E² Solutions Pvt Ltd. All rights reserved.
-               </p>
+                <div className="text-[11px]" style={{ color: '#64748b', fontSize: '11px', marginTop: '20px' }}>
+                  Registration is invitation-only. Please contact your sponsor to get registered.
+                </div>
+                <p className="text-[11px]" style={{ marginTop: '10px', fontSize: '11px', color: '#94a3b8' }}>
+                  © 2024 E² Solutions Pvt Ltd. All rights reserved.
+                </p>
             </div>
           </div>
         </div>

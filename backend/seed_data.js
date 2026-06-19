@@ -30,25 +30,25 @@ async function seedData() {
     // 1. Admin
     await connection.query(`
       INSERT INTO users (full_name, mobile, email, password, user_id, role, status, volume, main_wallet, income_wallet, created_at)
-      VALUES ('System Admin', '9999999999', 'admin@ec2.com', ?, 'BRIMLM-1000', 'ADMIN', 'ACTIVE', 0, 0, 0, '2023-01-01 10:00:00')
+      VALUES ('System Admin', '9999999999', 'admin@ec2.com', ?, 'E2S-1000', 'ADMIN', 'ACTIVE', 0, 0, 0, '2023-01-01 10:00:00')
     `, [password]);
 
     // Generate random users
     const users = [
-      { name: 'John Doe', uid: 'BMLM-1001', sponsor: 'BRIMLM-1000', placement: 'Left Side' },
-      { name: 'Jane Smith', uid: 'BMLM-1002', sponsor: 'BRIMLM-1000', placement: 'Right Side' },
+      { name: 'John Doe', uid: 'E2S-1001', sponsor: 'E2S-1000', placement: 'Left Side' },
+      { name: 'Jane Smith', uid: 'E2S-1002', sponsor: 'E2S-1000', placement: 'Right Side' },
       
-      { name: 'Alice Johnson', uid: 'BMLM-1003', sponsor: 'BMLM-1001', placement: 'Left Side' },
-      { name: 'Bob Williams', uid: 'BMLM-1004', sponsor: 'BMLM-1001', placement: 'Right Side' },
+      { name: 'Alice Johnson', uid: 'E2S-1003', sponsor: 'E2S-1001', placement: 'Left Side' },
+      { name: 'Bob Williams', uid: 'E2S-1004', sponsor: 'E2S-1001', placement: 'Right Side' },
       
-      { name: 'Charlie Brown', uid: 'BMLM-1005', sponsor: 'BMLM-1002', placement: 'Left Side' },
-      { name: 'Diana Prince', uid: 'BMLM-1006', sponsor: 'BMLM-1002', placement: 'Right Side' },
+      { name: 'Charlie Brown', uid: 'E2S-1005', sponsor: 'E2S-1002', placement: 'Left Side' },
+      { name: 'Diana Prince', uid: 'E2S-1006', sponsor: 'E2S-1002', placement: 'Right Side' },
       
-      { name: 'Eve Adams', uid: 'BMLM-1007', sponsor: 'BMLM-1003', placement: 'Left Side' },
-      { name: 'Frank Castle', uid: 'BMLM-1008', sponsor: 'BMLM-1004', placement: 'Left Side' },
+      { name: 'Eve Adams', uid: 'E2S-1007', sponsor: 'E2S-1003', placement: 'Left Side' },
+      { name: 'Frank Castle', uid: 'E2S-1008', sponsor: 'E2S-1004', placement: 'Left Side' },
       
-      { name: 'Grace Hopper', uid: 'BMLM-1009', sponsor: 'BMLM-1005', placement: 'Right Side' },
-      { name: 'Hank Pym', uid: 'BMLM-1010', sponsor: 'BMLM-1006', placement: 'Left Side' }
+      { name: 'Grace Hopper', uid: 'E2S-1009', sponsor: 'E2S-1005', placement: 'Right Side' },
+      { name: 'Hank Pym', uid: 'E2S-1010', sponsor: 'E2S-1006', placement: 'Left Side' }
     ];
 
     for (let i = 0; i < users.length; i++) {
@@ -111,7 +111,7 @@ async function seedData() {
     console.log('Inserting notifications...');
     await connection.query(`
       INSERT INTO notifications (message, type, created_at) VALUES 
-      ('New user registered: John Doe (BMLM-1001)', 'registration', NOW() - INTERVAL 1 HOUR),
+      ('New user registered: John Doe (E2S-1001)', 'registration', NOW() - INTERVAL 1 HOUR),
       ('Payout Request: $500 pending approval', 'withdrawal', NOW() - INTERVAL 2 HOUR),
       ('System Update: Routine maintenance', 'general', NOW() - INTERVAL 5 HOUR)
     `);

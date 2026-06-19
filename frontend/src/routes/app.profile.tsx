@@ -33,7 +33,7 @@ export const Route = createFileRoute("/app/profile")({
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"personal" | "kyc" | "support" | "security" | "settings">("personal");
+
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +103,7 @@ function ProfilePage() {
     );
   }
 
-  const referralCode = profile?.user_id || "BMLM-1284";
+  const referralCode = profile?.user_id || "E2S-1000";
   const fullName = profile?.full_name || "Aanya Sharma";
   const initials = fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'AS';
 
@@ -111,30 +111,7 @@ function ProfilePage() {
     <div className="no-scrollbar">
       <AppHeader title="Profile" subtitle="Manage your account" />
 
-      <div className="sticky top-[88px] z-10 bg-background/90 px-4 py-3 backdrop-blur-md border-b border-border/40 max-w-7xl mx-auto">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {[
-            { id: "personal", label: "Personal Info" },
-            { id: "kyc", label: "KYC Verification" },
-            { id: "support", label: "Support Center" },
-            { id: "security", label: "Security" },
-            { id: "settings", label: "Settings" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={cn(
-                "px-5 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap",
-                activeTab === tab.id 
-                  ? "bg-primary text-primary-foreground shadow-glow" 
-                  : "bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       <div className="space-y-4 px-4 pt-4 pb-20 md:space-y-6 md:p-8 md:pb-24 mx-auto max-w-7xl">
         
@@ -151,7 +128,6 @@ function ProfilePage() {
           </div>
         </section>
 
-        {activeTab === "personal" && (
           <div className="md:grid md:grid-cols-2 gap-4 md:gap-6 space-y-4 md:space-y-0">
             <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft">
               <h3 className="font-bold text-lg mb-4">Personal Details</h3>
@@ -172,131 +148,31 @@ function ProfilePage() {
               </div>
             </section>
             
-            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft h-fit">
+            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft h-fit flex flex-col">
               <h3 className="font-bold text-lg mb-4">Account Information</h3>
-              <ul className="divide-y divide-border">
+              <ul className="divide-y divide-border mb-6">
                 <li className="flex justify-between py-3">
                   <span className="text-muted-foreground text-sm">User ID</span>
                   <span className="font-bold text-sm">{referralCode}</span>
                 </li>
                 <li className="flex justify-between py-3">
                   <span className="text-muted-foreground text-sm">Sponsor ID</span>
-                  <span className="font-bold text-sm">BMLM-0001</span>
+                  <span className="font-bold text-sm">E2S-1000</span>
                 </li>
                 <li className="flex justify-between py-3">
                   <span className="text-muted-foreground text-sm">Joining Date</span>
                   <span className="font-bold text-sm">15 Jan 2026</span>
                 </li>
-                <li className="flex justify-between py-3">
+                <li className="flex justify-between py-3 border-b border-border">
                   <span className="text-muted-foreground text-sm">Current Plan</span>
                   <span className="font-bold text-sm text-primary">Premium</span>
                 </li>
               </ul>
             </section>
           </div>
-        )}
 
-        {activeTab === "kyc" && (
-          <div className="md:grid md:grid-cols-2 gap-4 md:gap-6 space-y-4 md:space-y-0">
-            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg">KYC Documents</h3>
-                <span className="flex items-center gap-1 text-success text-xs font-bold uppercase tracking-wider bg-success/15 px-2 py-1 rounded-full">
-                  <CheckCircle className="h-4 w-4" /> Approved
-                </span>
-              </div>
-              <div className="space-y-4">
-                <div className="border border-border rounded-xl p-4 flex items-center justify-between bg-accent/30">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-6 w-6 text-primary" />
-                    <div>
-                      <p className="font-bold text-sm">Aadhaar Card</p>
-                      <p className="text-xs text-success">Verified</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">Update</Button>
-                </div>
-                <div className="border border-border rounded-xl p-4 flex items-center justify-between bg-accent/30">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-6 w-6 text-primary" />
-                    <div>
-                      <p className="font-bold text-sm">PAN Card</p>
-                      <p className="text-xs text-success">Verified</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">Update</Button>
-                </div>
-              </div>
-            </section>
-            
-            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft">
-              <h3 className="font-bold text-lg mb-4">Bank & UPI Details</h3>
-              <div className="space-y-4">
-                <div className="border border-border rounded-xl p-4 flex items-center justify-between bg-accent/30">
-                  <div className="flex items-center gap-3">
-                    <Landmark className="h-6 w-6 text-primary" />
-                    <div>
-                      <p className="font-bold text-sm">State Bank of India</p>
-                      <p className="text-xs text-muted-foreground">**** **** 1234</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">Edit</Button>
-                </div>
-                <div className="border border-border rounded-xl p-4 flex items-center justify-between bg-accent/30">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="h-6 w-6 text-primary" />
-                    <div>
-                      <p className="font-bold text-sm">UPI ID</p>
-                      <p className="text-xs text-muted-foreground">user@upi</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">Edit</Button>
-                </div>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {activeTab === "support" && (
-          <div className="md:grid md:grid-cols-2 gap-4 md:gap-6 space-y-4 md:space-y-0">
-            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft flex flex-col items-center justify-center text-center space-y-4 py-8">
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-primary/10 text-primary">
-                <Headset className="h-8 w-8" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Need Help?</h3>
-                <p className="text-sm text-muted-foreground mt-1 max-w-xs">Our support team is available 24/7 to assist you with any platform issues.</p>
-              </div>
-              <Button className="w-full max-w-xs mt-2"><MessageSquare className="h-4 w-4 mr-2" /> Raise a Ticket</Button>
-            </section>
-
-            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft">
-              <h3 className="font-bold text-lg mb-4">Support History</h3>
-              <ul className="divide-y divide-border">
-                {[
-                  { id: "T-1029", issue: "Withdrawal Delay", status: "Resolved", date: "10 Jun 2026" },
-                  { id: "T-0984", issue: "KYC Rejected", status: "Closed", date: "01 May 2026" },
-                ].map((ticket) => (
-                  <li key={ticket.id} className="py-3 flex justify-between items-center">
-                    <div>
-                      <p className="font-bold text-sm">{ticket.issue}</p>
-                      <p className="text-xs text-muted-foreground">ID: {ticket.id} · {ticket.date}</p>
-                    </div>
-                    <span className={cn(
-                      "text-[10px] uppercase font-bold px-2 py-1 rounded-full",
-                      ticket.status === "Resolved" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                    )}>
-                      {ticket.status}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
-        )}
-
-        {activeTab === "security" && (
-          <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft max-w-2xl mx-auto">
+          <div className="md:grid md:grid-cols-2 gap-4 md:gap-6 space-y-4 md:space-y-0 mt-4 md:mt-6">
+            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft flex flex-col">
             <h3 className="font-bold text-lg mb-4">Security Settings</h3>
             <div className="space-y-4">
               <div className="space-y-1 relative">
@@ -343,10 +219,8 @@ function ProfilePage() {
               </div>
             </div>
           </section>
-        )}
 
-        {activeTab === "settings" && (
-          <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft max-w-2xl mx-auto">
+            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft flex flex-col">
             <h3 className="font-bold text-lg mb-4">Application Settings</h3>
             
             <div className="space-y-6">
@@ -370,15 +244,15 @@ function ProfilePage() {
                   <option>Spanish</option>
                 </select>
               </div>
-
-              <div className="pt-6 border-t border-border">
-                <Button variant="outline" className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" /> Log Out From All Devices
-                </Button>
-              </div>
             </div>
           </section>
-        )}
+        </div>
+
+        <div className="mt-8 flex justify-center max-w-2xl mx-auto w-full">
+          <Button variant="outline" className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive bg-card shadow-soft h-12 text-sm font-bold rounded-2xl" onClick={handleLogout}>
+            <LogOut className="h-5 w-5 mr-2" /> Log Out
+          </Button>
+        </div>
 
       </div>
     </div>

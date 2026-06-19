@@ -52,17 +52,74 @@ const OrgTreeStyles = () => (
     .org-tree li > div {
       display: inline-block;
     }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
   `}} />
 );
 
-const BinaryNode = ({ user, isRoot = false }) => {
+const BinaryNode = ({ user, isRoot = false, side = null, parentNode = null, onEmptyClick = null, isOpening = false }) => {
   // If user is null or empty object, treat as empty node
   if (!user || Object.keys(user).length === 0) {
+    const handleEmptyClick = () => {
+      if (isOpening) return;
+      if (onEmptyClick && parentNode && side) {
+        onEmptyClick(parentNode.id, side);
+      }
+    };
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: '16px', border: '1px dashed var(--color-border)', width: '120px', backgroundColor: 'var(--color-bg)', color: 'var(--color-text-muted)', height: '140px' }}>
-        <span style={{ fontSize: '20px', fontWeight: 'bold', opacity: 0.5, marginBottom: '4px' }}>+</span>
-        <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empty</span>
-      </div>
+      <button 
+        onClick={handleEmptyClick}
+        type="button"
+        disabled={isOpening}
+        onMouseEnter={(e) => {
+          if (isOpening) return;
+          e.currentTarget.style.borderColor = '#5B3DF5';
+          e.currentTarget.style.backgroundColor = 'rgba(91, 61, 245, 0.05)';
+        }}
+        onMouseLeave={(e) => {
+          if (isOpening) return;
+          e.currentTarget.style.borderColor = 'var(--color-border)';
+          e.currentTarget.style.backgroundColor = 'var(--color-bg)';
+        }}
+        style={{ 
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+          padding: '12px', borderRadius: '16px', border: isOpening ? '1px solid #5B3DF5' : '1px dashed var(--color-border)', 
+          width: '120px', backgroundColor: isOpening ? 'rgba(91, 61, 245, 0.05)' : 'var(--color-bg)', color: isOpening ? '#5B3DF5' : 'var(--color-text-muted)', 
+          height: '140px', cursor: isOpening ? 'default' : 'pointer', transition: 'all 0.2s ease-in-out', outline: 'none',
+          transform: isOpening ? 'scale(0.95)' : 'none'
+        }}
+        onMouseDown={(e) => {
+          if (!isOpening) e.currentTarget.style.transform = 'scale(0.95)';
+        }}
+        onMouseUp={(e) => {
+          if (!isOpening) e.currentTarget.style.transform = 'none';
+        }}
+      >
+        {isOpening ? (
+          <>
+            <div style={{
+              width: '20px',
+              height: '20px',
+              border: '2px solid #5B3DF5',
+              borderTopColor: 'transparent',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              marginBottom: '8px'
+            }} />
+            <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', animation: 'pulse 1.5s ease-in-out infinite' }}>Opening...</span>
+          </>
+        ) : (
+          <>
+            <span style={{ fontSize: '20px', fontWeight: 'bold', opacity: 0.5, marginBottom: '4px' }}>+</span>
+            <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Empty</span>
+          </>
+        )}
+      </button>
     );
   }
 
@@ -109,18 +166,28 @@ const BinaryNode = ({ user, isRoot = false }) => {
   );
 };
 
-const renderTree = (node, isRoot = true, side = null, level = 0) => {
+const renderTree = (node, isRoot = true, side = null, level = 0, parentNode = null, onEmptyClick = null, clickedSlot = null) => {
   if (!node && level > 2) return null; // limit mock depth
   
   const nodeWithSide = node ? { ...node, side } : null;
+  const isOpening = !!(clickedSlot && clickedSlot.parentId === parentNode?.id && clickedSlot.side === side);
 
   return (
     <li key={node?.id || Math.random()}>
-      <div><BinaryNode user={nodeWithSide} isRoot={isRoot} /></div>
+      <div>
+        <BinaryNode 
+          user={nodeWithSide} 
+          isRoot={isRoot} 
+          side={side} 
+          parentNode={parentNode} 
+          onEmptyClick={onEmptyClick} 
+          isOpening={isOpening}
+        />
+      </div>
       {node && (node.left || node.right || level < 2) && (
         <ul>
-          {renderTree(node.left, false, "Left", level + 1)}
-          {renderTree(node.right, false, "Right", level + 1)}
+          {renderTree(node.left, false, "Left", level + 1, node, onEmptyClick, clickedSlot)}
+          {renderTree(node.right, false, "Right", level + 1, node, onEmptyClick, clickedSlot)}
         </ul>
       )}
     </li>
@@ -130,6 +197,81 @@ const renderTree = (node, isRoot = true, side = null, level = 0) => {
 const BinaryNetwork = () => {
   const [treeData, setTreeData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [regModal, setRegModal] = useState({
+    open: false,
+    parentId: '',
+    placement: 'Left Side'
+  });
+  const [regForm, setRegForm] = useState({
+    fullName: '',
+    mobile: '',
+    email: '',
+    password: '',
+    investingAmount: ''
+  });
+  const [regSubmitting, setRegSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [clickedSlot, setClickedSlot] = useState(null);
+
+  const handleEmptyNodeClick = (parentId, side) => {
+    setClickedSlot({ parentId, side });
+    setTimeout(() => {
+      setRegModal({
+        open: true,
+        parentId: parentId,
+        placement: side === "Left" ? "Left Side" : "Right Side",
+      });
+      setRegForm({
+        fullName: '',
+        mobile: '',
+        email: '',
+        password: '',
+        investingAmount: ''
+      });
+      setErrorMessage('');
+      setSuccessMessage('');
+      setClickedSlot(null);
+    }, 450);
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    if (!regForm.fullName || !regForm.mobile || !regForm.email || !regForm.password || !regForm.investingAmount) {
+      setErrorMessage("Please fill in all fields.");
+      return;
+    }
+    setRegSubmitting(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      await api.post('/auth/register', {
+        fullName: regForm.fullName,
+        mobile: regForm.mobile,
+        email: regForm.email,
+        password: regForm.password,
+        sponsorId: regModal.parentId,
+        parentId: regModal.parentId,
+        placement: regModal.placement,
+        investingAmount: regForm.investingAmount
+      });
+
+      setSuccessMessage("User registered and placed successfully!");
+      
+      // Refresh tree data
+      const res = await api.get('/admin/network');
+      setTreeData(res.data);
+      
+      setTimeout(() => {
+        setRegModal(prev => ({ ...prev, open: false }));
+      }, 1000);
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || "Failed to register user");
+    } finally {
+      setRegSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchTree = async () => {
@@ -219,11 +361,248 @@ const BinaryNetwork = () => {
         <div style={{ width: 'max-content', margin: '0 auto', padding: '0 20px' }}>
           <div className="org-tree">
             <ul>
-              {loading ? <div style={{ padding: '40px' }}>Loading tree...</div> : renderTree(treeData, true)}
+              {loading ? <div style={{ padding: '40px' }}>Loading tree...</div> : renderTree(treeData, true, null, 0, null, handleEmptyNodeClick, clickedSlot)}
             </ul>
           </div>
         </div>
       </div>
+
+      {regModal.open && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div className="card" style={{
+            padding: '28px',
+            width: '100%',
+            maxWidth: '440px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            borderRadius: '24px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            backgroundColor: 'var(--color-card)',
+            border: '1px solid var(--color-border)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 4px 0', color: 'var(--color-text)' }}>Add New Member (Admin Mode)</h3>
+              <p className="text-muted" style={{ fontSize: '0.75rem', margin: 0 }}>Register and place a member directly under this node.</p>
+            </div>
+
+            {errorMessage && (
+              <div style={{ padding: '10px 14px', borderRadius: '10px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontSize: '0.8rem', fontWeight: 600 }}>
+                {errorMessage}
+              </div>
+            )}
+
+            {successMessage && (
+              <div style={{ padding: '10px 14px', borderRadius: '10px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '0.8rem', fontWeight: 600 }}>
+                {successMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>Full Name</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="John Doe" 
+                  value={regForm.fullName} 
+                  onChange={(e) => setRegForm({ ...regForm, fullName: e.target.value })}
+                  style={{
+                    height: '42px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>Mobile Number</label>
+                <input 
+                  type="tel" 
+                  required
+                  placeholder="9876543210" 
+                  value={regForm.mobile} 
+                  onChange={(e) => setRegForm({ ...regForm, mobile: e.target.value })}
+                  style={{
+                    height: '42px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  placeholder="john@example.com" 
+                  value={regForm.email} 
+                  onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                  style={{
+                    height: '42px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>Password</label>
+                <input 
+                  type="password" 
+                  required
+                  placeholder="••••••••" 
+                  value={regForm.password} 
+                  onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
+                  style={{
+                    height: '42px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>Investing Amount</label>
+                <input 
+                  type="number" 
+                  required
+                  min="0"
+                  placeholder="Enter investing amount" 
+                  value={regForm.investingAmount} 
+                  onChange={(e) => setRegForm({ ...regForm, investingAmount: e.target.value })}
+                  style={{
+                    height: '42px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>Sponsor / Parent ID</label>
+                  <input 
+                    type="text" 
+                    readOnly
+                    value={regModal.parentId} 
+                    style={{
+                      height: '42px',
+                      padding: '0 12px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--color-border)',
+                      backgroundColor: 'var(--color-bg)',
+                      color: 'var(--color-text-muted)',
+                      outline: 'none',
+                      fontSize: '0.875rem',
+                      cursor: 'not-allowed',
+                      opacity: 0.8
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>Placement</label>
+                  <input 
+                    type="text" 
+                    readOnly
+                    value={regModal.placement} 
+                    style={{
+                      height: '42px',
+                      padding: '0 12px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--color-border)',
+                      backgroundColor: 'var(--color-bg)',
+                      color: 'var(--color-text-muted)',
+                      outline: 'none',
+                      fontSize: '0.875rem',
+                      cursor: 'not-allowed',
+                      opacity: 0.8
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                <button 
+                  type="button" 
+                  disabled={regSubmitting}
+                  onClick={() => setRegModal(prev => ({ ...prev, open: false }))}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={regSubmitting}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    backgroundColor: '#5B3DF5',
+                    color: 'white',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 6px rgba(91, 61, 245, 0.2)'
+                  }}
+                >
+                  {regSubmitting ? "Registering..." : "Add Member"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

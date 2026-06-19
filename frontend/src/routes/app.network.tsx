@@ -3,7 +3,7 @@ import { memo, useState, useEffect } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts";
 import { Search, Users, UserPlus, ArrowLeft, ArrowRight, GitMerge, Link as LinkIcon, Copy, QrCode } from "lucide-react";
 import { AppHeader } from "@/components/app/AppHeader";
-import { compact, teamGrowthSeries, topPerformers, inr } from "@/lib/mock-data";
+import { teamGrowthSeries, inr } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import api from "@/services/api";
@@ -85,13 +85,47 @@ const OrgTreeStyles = () => (
   `}} />
 );
 
-const TreeNodeCard = ({ node, isRoot = false, side = null }: { node: any, isRoot?: boolean, side?: "Left" | "Right" | null }) => {
-  if (!node || Object.keys(node).length === 0) return (
-     <div className="flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-border w-[120px] bg-accent/30 text-muted-foreground h-[140px]">
-       <span className="text-[20px] font-semibold text-muted-foreground/40 mb-1">+</span>
-       <span className="text-[10px] font-semibold uppercase tracking-wider">Empty</span>
-     </div>
-  );
+interface TreeNodeCardProps {
+  node: any;
+  isRoot?: boolean;
+  side?: "Left" | "Right" | null;
+  parentNode?: any;
+  onEmptyClick?: (parentId: string, side: "Left" | "Right") => void;
+  isOpening?: boolean;
+}
+
+const TreeNodeCard = ({ node, isRoot = false, side = null, parentNode = null, onEmptyClick, isOpening = false }: TreeNodeCardProps) => {
+  if (!node || Object.keys(node).length === 0) {
+    const handleEmptyClick = () => {
+      if (isOpening) return;
+      if (onEmptyClick && parentNode && side) {
+        onEmptyClick(parentNode.id, side);
+      }
+    };
+    return (
+       <button 
+         onClick={handleEmptyClick}
+         type="button"
+         disabled={isOpening}
+         className={cn(
+           "flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-border w-[120px] bg-accent/30 text-muted-foreground h-[140px] hover:bg-accent/50 hover:border-primary/50 transition-all cursor-pointer outline-none focus:ring-2 focus:ring-primary active:scale-95 active:bg-accent/70 duration-150",
+           isOpening && "border-primary/60 bg-primary/5 text-primary scale-95"
+         )}
+       >
+         {isOpening ? (
+           <>
+             <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+             <span className="text-[10px] font-bold uppercase tracking-wider animate-pulse">Opening...</span>
+           </>
+         ) : (
+           <>
+             <span className="text-[20px] font-semibold text-muted-foreground/40 mb-1">+</span>
+             <span className="text-[10px] font-semibold uppercase tracking-wider">Empty</span>
+           </>
+         )}
+       </button>
+    );
+  }
   
   const initial = node.name ? node.name.split(' ').map((n: string) => n[0]).join('').substring(0,2).toUpperCase() : 'U';
 
@@ -125,16 +159,35 @@ const TreeNodeCard = ({ node, isRoot = false, side = null }: { node: any, isRoot
   );
 };
 
-const renderTree = (node: any, isRoot = true, side: "Left" | "Right" | null = null, level = 0) => {
+const renderTree = (
+  node: any, 
+  isRoot = true, 
+  side: "Left" | "Right" | null = null, 
+  level = 0, 
+  parentNode: any = null,
+  onEmptyClick?: (parentId: string, side: "Left" | "Right") => void,
+  clickedSlot?: { parentId: string, side: "Left" | "Right" } | null
+) => {
   if (!node && level > 2) return null; // limit mock depth
+  
+  const isOpening = !!(clickedSlot && clickedSlot.parentId === parentNode?.id && clickedSlot.side === side);
   
   return (
     <li key={node?.id || Math.random()}>
-      <div><TreeNodeCard node={node} isRoot={isRoot} side={side} /></div>
+      <div>
+        <TreeNodeCard 
+          node={node} 
+          isRoot={isRoot} 
+          side={side} 
+          parentNode={parentNode} 
+          onEmptyClick={onEmptyClick}
+          isOpening={isOpening}
+        />
+      </div>
       {node && (node.left || node.right || level < 2) && (
         <ul>
-          {renderTree(node.left, false, "Left", level + 1)}
-          {renderTree(node.right, false, "Right", level + 1)}
+          {renderTree(node.left, false, "Left", level + 1, node, onEmptyClick, clickedSlot)}
+          {renderTree(node.right, false, "Right", level + 1, node, onEmptyClick, clickedSlot)}
         </ul>
       )}
     </li>
@@ -142,13 +195,84 @@ const renderTree = (node: any, isRoot = true, side: "Left" | "Right" | null = nu
 };
 
 function NetworkPage() {
-  const [activeTab, setActiveTab] = useState<"tree" | "team" | "referrals">("team");
+  const [activeTab, setActiveTab] = useState<"tree" | "team">("team");
   const [treeData, setTreeData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [placementModal, setPlacementModal] = useState({ open: false, userId: null, originalSponsor: '' });
   const [parentInput, setParentInput] = useState('');
   const [placementSide, setPlacementSide] = useState<'Left Side' | 'Right Side'>('Left Side');
+
+  const [regModal, setRegModal] = useState({
+    open: false,
+    parentId: '',
+    placement: 'Left Side' as 'Left Side' | 'Right Side',
+  });
+  const [regForm, setRegForm] = useState({
+    fullName: '',
+    mobile: '',
+    email: '',
+    password: '',
+    investingAmount: '',
+  });
+  const [regSubmitting, setRegSubmitting] = useState(false);
+  const [clickedSlot, setClickedSlot] = useState<{ parentId: string, side: "Left" | "Right" } | null>(null);
+
+  const handleEmptyNodeClick = (parentId: string, side: "Left" | "Right") => {
+    setClickedSlot({ parentId, side });
+    setTimeout(() => {
+      setRegModal({
+        open: true,
+        parentId: parentId,
+        placement: side === "Left" ? "Left Side" : "Right Side",
+      });
+      setRegForm({
+        fullName: '',
+        mobile: '',
+        email: '',
+        password: '',
+        investingAmount: '',
+      });
+      setClickedSlot(null);
+    }, 450);
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regForm.fullName || !regForm.mobile || !regForm.email || !regForm.password || !regForm.investingAmount) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    setRegSubmitting(true);
+    try {
+      await api.post('/auth/register', {
+        fullName: regForm.fullName,
+        mobile: regForm.mobile,
+        email: regForm.email,
+        password: regForm.password,
+        sponsorId: regModal.parentId,
+        parentId: regModal.parentId,
+        placement: regModal.placement,
+        investingAmount: regForm.investingAmount
+      });
+
+      toast.success("User registered and placed successfully!");
+      setRegModal(prev => ({ ...prev, open: false }));
+      
+      setLoading(true);
+      const [treeRes, refRes] = await Promise.all([
+        api.get('/user/network'),
+        api.get('/user/referrals')
+      ]);
+      setTreeData(treeRes.data);
+      setReferrals(refRes.data);
+      setLoading(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to register user");
+    } finally {
+      setRegSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -227,7 +351,6 @@ function NetworkPage() {
           {[
             { id: "tree", label: "Binary Tree" },
             { id: "team", label: "Team" },
-            { id: "referrals", label: "Referrals" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -260,7 +383,7 @@ function NetworkPage() {
             </div>
 
             <div className="md:grid md:grid-cols-12 md:gap-6 space-y-4 md:space-y-0 mt-4 md:mt-6">
-              <div className="md:col-span-8 space-y-4 md:space-y-6">
+              <div className="md:col-span-12 space-y-4 md:space-y-6">
                 <section className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
                   {stats.map((s) => (
                     <div
@@ -312,34 +435,6 @@ function NetworkPage() {
                 </section>
               </div>
 
-              <div className="md:col-span-4">
-                <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft h-full">
-                  <p className="mb-1 md:mb-4 text-sm md:text-base font-bold text-foreground">Top Performers</p>
-                  <ul className="divide-y divide-border">
-                    {topPerformers.map((m) => (
-                      <li key={m.id} className="flex items-center gap-3 py-3 md:py-4">
-                        <span className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-gradient-primary text-sm md:text-base font-bold text-primary-foreground">
-                          {m.name.split(" ").map((n) => n[0]).join("")}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm md:text-base font-semibold text-foreground">{m.name}</p>
-                          <p className="text-xs md:text-sm text-muted-foreground">
-                            Volume {inr(m.volume)} · {compact(m.team)} team
-                          </p>
-                        </div>
-                        <span
-                          className={cn(
-                            "rounded-full px-2 md:px-3 py-0.5 md:py-1 text-[11px] md:text-xs font-semibold capitalize",
-                            statusTone[m.status],
-                          )}
-                        >
-                          {m.side}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              </div>
             </div>
           </>
         )}
@@ -347,17 +442,12 @@ function NetworkPage() {
         {activeTab === "tree" && (
           <div className="flex flex-col items-center justify-center py-6 md:py-8 text-center space-y-6">
             <OrgTreeStyles />
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold">Interactive Binary Tree</h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Explore your left and right network structures visually. Expand nodes and view matching volume easily.
-              </p>
-            </div>
+            <h2 className="text-2xl font-bold">Interactive Binary Tree</h2>
             <div className="w-full max-w-5xl rounded-3xl bg-card py-4 md:py-8 shadow-soft border border-border overflow-x-auto no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
               <div style={{ width: 'max-content', margin: '0 auto', padding: '0 20px' }}>
                 <div className="org-tree">
                   <ul>
-                    {loading ? <div>Loading tree...</div> : renderTree(treeData, true)}
+                    {loading ? <div>Loading tree...</div> : renderTree(treeData, true, null, 0, null, handleEmptyNodeClick, clickedSlot)}
                   </ul>
                 </div>
               </div>
@@ -365,61 +455,7 @@ function NetworkPage() {
           </div>
         )}
 
-        {activeTab === "referrals" && (
-          <div className="space-y-6">
-            <section className="rounded-3xl bg-gradient-hero p-6 md:p-8 text-primary-foreground shadow-glow flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Your Referral Link</h2>
-                <p className="text-primary-foreground/80 mt-1">Share this link to invite new members to your network.</p>
-                <div className="mt-4 flex items-center gap-2 bg-background/20 p-2 pl-4 rounded-xl backdrop-blur-sm border border-primary-foreground/20">
-                  <span className="text-sm font-medium truncate flex-1">https://e2solutions.com/ref/USER8829</span>
-                  <Button size="sm" variant="secondary" className="font-bold shrink-0">
-                    <Copy className="h-4 w-4 mr-2" /> Copy
-                  </Button>
-                </div>
-              </div>
-              <div className="shrink-0 flex justify-center">
-                <div className="bg-white p-3 rounded-2xl shadow-soft">
-                  <QrCode className="h-24 w-24 text-primary" />
-                </div>
-              </div>
-            </section>
-            
-            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft h-full">
-              <p className="mb-4 text-sm md:text-base font-bold text-foreground">Direct Referrals ({referrals.length})</p>
-              <ul className="divide-y divide-border">
-                {loading ? <div className="py-4">Loading referrals...</div> : referrals.length === 0 ? <div className="py-4 text-muted-foreground">No referrals yet.</div> : referrals.map((r: any) => (
-                  <li key={r.id} className="flex items-center gap-3 py-3">
-                    <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center font-bold text-primary-foreground">
-                      {r.name.substring(0,2).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm">{r.name}</p>
-                      <p className="text-xs text-muted-foreground">Joined: {r.joined}</p>
-                    </div>
-                    <div className="text-right flex items-center gap-4">
-                      <div>
-                        <p className="text-sm font-bold text-success">+ {inr(r.volume || 0)}</p>
-                        <p className={cn("text-xs font-semibold capitalize", statusTone[r.status] || "text-muted-foreground")}>{r.status}</p>
-                      </div>
-                      {r.placement === 'Pending' && (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setPlacementModal({ open: true, userId: r.id, originalSponsor: r.sponsorId });
-                            setParentInput(treeData?.id || "");
-                          }}
-                        >
-                          Place
-                        </Button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
-        )}
+
       </div>
 
       {placementModal.open && (
@@ -432,7 +468,7 @@ function NetworkPage() {
               <label className="text-xs font-semibold text-foreground block">Parent ID</label>
               <input 
                 type="text" 
-                placeholder="e.g. BRIMLM-1000" 
+                placeholder="e.g. E2S-1000" 
                 value={parentInput} 
                 onChange={(e) => setParentInput(e.target.value)}
                 className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
@@ -459,6 +495,108 @@ function NetworkPage() {
                 Save Placement
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {regModal.open && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-md shadow-soft space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
+            <h3 className="text-lg font-bold text-foreground">Add New Member</h3>
+            <p className="text-xs text-muted-foreground">Register and place a new member directly in this slot.</p>
+            
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground block">Full Name</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Enter full name" 
+                  value={regForm.fullName} 
+                  onChange={(e) => setRegForm({ ...regForm, fullName: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground block">Mobile Number</label>
+                <input 
+                  type="tel" 
+                  required
+                  placeholder="Enter mobile number" 
+                  value={regForm.mobile} 
+                  onChange={(e) => setRegForm({ ...regForm, mobile: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground block">Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  placeholder="Enter email address" 
+                  value={regForm.email} 
+                  onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground block">Password</label>
+                <input 
+                  type="password" 
+                  required
+                  placeholder="Enter password" 
+                  value={regForm.password} 
+                  onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground block">Investing Amount</label>
+                <input 
+                  type="number" 
+                  required
+                  min="0"
+                  placeholder="Enter investing amount" 
+                  value={regForm.investingAmount} 
+                  onChange={(e) => setRegForm({ ...regForm, investingAmount: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground block">Sponsor ID</label>
+                  <input 
+                    type="text" 
+                    readOnly
+                    value={regModal.parentId} 
+                    className="w-full h-11 px-4 rounded-xl border border-border bg-muted/50 text-sm text-muted-foreground outline-none cursor-not-allowed opacity-80"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground block">Placement</label>
+                  <input 
+                    type="text" 
+                    readOnly
+                    value={regModal.placement} 
+                    className="w-full h-11 px-4 rounded-xl border border-border bg-muted/50 text-sm text-muted-foreground outline-none cursor-not-allowed opacity-80"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2 justify-end">
+                <Button type="button" size="sm" variant="outline" onClick={() => setRegModal(prev => ({ ...prev, open: false }))} disabled={regSubmitting}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" disabled={regSubmitting}>
+                  {regSubmitting ? "Registering..." : "Add Member"}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -178,9 +178,9 @@ const buildTree = async (user_id, currentDepth, maxDepth) => {
 
   if (currentDepth < maxDepth) {
     const sponsorIds = [user_id];
-    if (user_id === 'BRIMLM-1000') {
-      sponsorIds.push('BMLM-1000');
-      sponsorIds.push('BRIMLM-100000');
+    if (user_id === 'E2S-1000') {
+      sponsorIds.push('E2S-1000');
+      sponsorIds.push('E2S-100000');
     }
     const [children] = await pool.query('SELECT user_id, placement FROM users WHERE sponsor_id IN (?)', [sponsorIds]);
     const leftChild = children.find(c => c.placement === 'Left Side');
@@ -228,7 +228,7 @@ const updatePlacement = async (req, res) => {
     }
 
     // Target sponsor/parent defaults to the user's original sponsor_id if not provided
-    const finalParentId = targetParentId || userToPlace.sponsor_id || 'BRIMLM-1000';
+    const finalParentId = targetParentId || userToPlace.sponsor_id || 'E2S-1000';
 
     // 2. Verify target parent exists
     const [parents] = await pool.query('SELECT * FROM users WHERE user_id = ?', [finalParentId]);
@@ -256,7 +256,7 @@ const updatePlacement = async (req, res) => {
     );
 
     await pool.query(
-      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', 'BRIMLM-1000')",
+      "INSERT INTO notifications (message, type, user_id) VALUES (?, 'general', 'E2S-1000')",
       [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`]
     );
 

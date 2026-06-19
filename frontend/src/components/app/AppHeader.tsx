@@ -68,7 +68,9 @@ export function AppHeader({
     <header className="sticky top-0 z-20 bg-background/90 px-4 pb-3 pt-8 backdrop-blur-md border-b border-border/40">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <SidePanel />
+          <div className="hidden md:block">
+            <SidePanel />
+          </div>
           {title ? (
             <div className="min-w-0 truncate">
               <h1 className="text-lg font-extrabold tracking-tight text-foreground truncate">{title}</h1>

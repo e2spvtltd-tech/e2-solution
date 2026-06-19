@@ -1,79 +1,40 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { toastWithSound as toast } from "@/lib/toast-with-sound";
-import { ArrowRight, ArrowLeft } from "lucide-react";
-import { AuthShell, Field } from "@/components/auth/AuthShell";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/register")({
-  head: () => ({ meta: [{ title: "Create Account - e2solution.in" }] }),
+  head: () => ({ meta: [{ title: "Invitation-Only Network - e2solution.in" }] }),
   component: RegisterPage,
 });
 
 function RegisterPage() {
-  const navigate = useNavigate();
-  
-  const searchParams = new URLSearchParams(window.location.search);
-  const initialSponsor = searchParams.get('sponsor') || "";
-  const isReferred = Boolean(initialSponsor);
-
-  const [loading, setLoading] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [sponsorId, setSponsorId] = useState(initialSponsor);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const api = (await import("@/services/api")).default;
-      const res = await api.post('/auth/register', { fullName, mobile, email, password, sponsorId, placement: 'Pending' });
-      localStorage.setItem('token', res.data.token);
-      toast.success("Account created successfully");
-      navigate({ to: "/app" });
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Registration failed");
-      setLoading(false);
-    }
-  };
   return (
     <AuthShell
-      title="Account Creation"
-      subtitle="Join the network in a few quick steps"
+      title="Invitation-Only Network"
+      subtitle="E2 Solutions is an exclusive investment network"
       footer={
         <div className="flex flex-col gap-4">
-          <div>
-            Already a member?{" "}
-            <Link to="/login" className="font-semibold text-primary hover:underline">
-              Sign In
-            </Link>
-          </div>
-          <Link to="/" className="inline-flex items-center justify-center gap-2 font-medium hover:text-foreground transition-colors py-2">
-            <ArrowLeft className="h-4 w-4" /> Back to Home
+          <Link to="/login" className="inline-flex items-center justify-center gap-2 font-medium hover:text-foreground transition-colors py-2">
+            <ArrowLeft className="h-4 w-4" /> Go to Sign In
           </Link>
         </div>
       }
     >
-      <form onSubmit={submit} className="space-y-4">
-        <Field label="Full Name" type="text" placeholder="Your full name" value={fullName} onChange={(e: any) => setFullName(e.target.value)} required />
-        <Field label="Mobile Number" type="tel" placeholder="+91 00000 00000" value={mobile} onChange={(e: any) => setMobile(e.target.value)} required />
-        <Field label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e: any) => setEmail(e.target.value)} required />
-        <Field label="Password" type="password" placeholder="Create a password" value={password} onChange={(e: any) => setPassword(e.target.value)} required />
-        <Field 
-          label={isReferred ? "Sponsor ID (Locked)" : "Sponsor ID (optional)"} 
-          type="text" 
-          placeholder="BMLM-0000" 
-          value={sponsorId} 
-          onChange={(e: any) => !isReferred && setSponsorId(e.target.value)} 
-          disabled={isReferred}
-        />
-        <Button type="submit" variant="hero" className="w-full" disabled={loading}>
-          {loading ? "Registering..." : "Complete Registration"}
-          <ArrowRight className="h-4 w-4" />
+      <div className="text-center space-y-4 py-4 flex flex-col items-center">
+        <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2 shadow-sm animate-pulse">
+          <ShieldAlert className="h-7 w-7" />
+        </div>
+        <p className="text-sm font-semibold text-foreground">
+          Public registration is disabled.
+        </p>
+        <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+          E2 Solutions operates as an exclusive, direct-placement binary network. Please contact an existing network member (your sponsor) to get registered and placed directly inside the binary structure.
+        </p>
+        <Button asChild className="w-full mt-4 rounded-full h-11" variant="hero">
+          <Link to="/login">Sign In to Dashboard</Link>
         </Button>
-      </form>
+      </div>
     </AuthShell>
   );
 }

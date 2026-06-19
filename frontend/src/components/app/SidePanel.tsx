@@ -7,7 +7,6 @@ import {
   User, 
   Network, 
   Receipt, 
-  Wallet, 
   BadgeDollarSign, 
   Trophy, 
   Headset,
@@ -23,7 +22,6 @@ const links = [
   { icon: Network, label: "Network", to: "/app/network" },
   { icon: Receipt, label: "Investments", to: "/app/invest" },
   { icon: BadgeDollarSign, label: "Earnings", to: "/app/earnings" },
-  { icon: Wallet, label: "Wallet", to: "/app/wallet" },
   { icon: User, label: "Profile", to: "/app/profile" },
 ];
 
