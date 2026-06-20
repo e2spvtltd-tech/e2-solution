@@ -20,13 +20,22 @@ export function AppHeader({
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [hasNewNotif, setHasNewNotif] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem('user_profile');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return null;
+  });
   const prevNotifCountRef = useRef(0);
   const isFirstLoadRef = useRef(true);
 
   // Fetch profile
   useEffect(() => {
-    api.get("/user/profile").then(res => setProfile(res.data)).catch(() => {});
+    api.get("/user/profile").then(res => {
+      setProfile(res.data);
+      localStorage.setItem('user_profile', JSON.stringify(res.data));
+    }).catch(() => {});
   }, []);
 
   // Poll notifications every 15 seconds with sound
@@ -62,7 +71,7 @@ export function AppHeader({
 
   const initials = profile?.full_name 
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() 
-    : "FK";
+    : "";
 
   return (
     <header className="sticky top-0 z-20 bg-background/90 px-4 pb-3 pt-8 backdrop-blur-md border-b border-border/40">

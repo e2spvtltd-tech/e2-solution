@@ -27,6 +27,8 @@ app.use('/api/investments', investmentRoutes);
 
 // Initialize Cron Jobs
 require('./cron/roi.cron');
+require('./cron/referral.cron');
+require('./cron/binary.cron');
 
 // Basic Route
 app.get('/', (req, res) => {

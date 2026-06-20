@@ -1,9 +1,9 @@
 const cron = require('node-cron');
 const { pool } = require('../config/db');
 
-// Schedule: '0 0 * * 1-5' runs at 00:00 every Monday through Friday
+// Schedule: '59 23 * * *' runs at 23:59 (11:59 PM) every day
 // For testing purposes, we use standard cron format.
-cron.schedule('0 0 * * 1-5', async () => {
+cron.schedule('59 23 * * *', async () => {
   console.log('Running Daily ROI Cron Job...');
   try {
     const connection = await pool.getConnection();

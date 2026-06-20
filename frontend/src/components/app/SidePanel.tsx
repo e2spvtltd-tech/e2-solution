@@ -30,11 +30,20 @@ import { useEffect } from "react";
 
 export function SidePanel() {
   const [open, setOpen] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem('user_profile');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return null;
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/user/profile").then(res => setProfile(res.data)).catch(() => {});
+    api.get("/user/profile").then(res => {
+      setProfile(res.data);
+      localStorage.setItem('user_profile', JSON.stringify(res.data));
+    }).catch(() => {});
   }, []);
 
   const handleLogout = () => {
@@ -45,7 +54,7 @@ export function SidePanel() {
 
   const initials = profile?.full_name 
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() 
-    : "FK";
+    : "";
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>

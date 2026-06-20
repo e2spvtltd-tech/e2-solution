@@ -100,4 +100,4 @@ async function calculateAndPayBinaryBonus(startUserId) {
   }
 }
 
-module.exports = { calculateAndPayBinaryBonus };
+module.exports = { calculateAndPayBinaryBonus, getLegVolume };

@@ -34,19 +34,18 @@ const createInvestment = async (req, res) => {
         if (sponsors.length > 0) {
           const sponsor = sponsors[0];
           
-          // Credit Sponsor's income wallet
-          await conn.query("UPDATE users SET income_wallet = income_wallet + ? WHERE id = ?", [bonus, sponsor.id]);
+          // Note: Income wallet update is deferred until the daily cron cutoff at 11:59 PM.
           
-          // Record the referral transaction for the sponsor
+          // Record the referral transaction for the sponsor as PENDING
           await conn.query(
-            "INSERT INTO transactions (user_id, title, subtitle, amount, type, status, created_at) VALUES (?, 'Direct Referral Bonus', ?, ?, 'referral', 'COMPLETED', NOW())",
+            "INSERT INTO transactions (user_id, title, subtitle, amount, type, status, created_at) VALUES (?, 'Direct Referral Bonus', ?, ?, 'referral', 'PENDING', NOW())",
             [sponsor.id, `5% from ${user.full_name} (${user.user_id})`, bonus]
           );
 
           // Notify Sponsor
           await conn.query(
             "INSERT INTO notifications (message, type) VALUES (?, 'general')",
-            [`You received a 5% referral bonus ($${bonus}) from ${user.full_name}'s investment.`]
+            [`You have a pending 5% referral bonus (₹${bonus}) from ${user.full_name}'s investment. It will be credited at the daily cutoff.`]
           );
         }
       }
@@ -54,8 +53,7 @@ const createInvestment = async (req, res) => {
       await conn.commit();
       conn.release();
 
-      // Trigger Binary Matching Bonus evaluation for the upline asynchronously
-      calculateAndPayBinaryBonus(user.user_id);
+      // Note: Binary Matching Bonus evaluation for the upline is deferred to the daily cron cutoff
 
       res.status(201).json({ message: 'Investment created successfully. Referral bonuses distributed if applicable.' });
     } catch (error) {

@@ -103,6 +103,7 @@ const UserManagement = () => {
                 <th style={{ padding: '16px 8px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Name</th>
                 <th style={{ padding: '16px 8px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Mobile</th>
                 <th style={{ padding: '16px 8px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Sponsor ID</th>
+                <th style={{ padding: '16px 8px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Parent Node</th>
                 <th style={{ padding: '16px 8px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Placement</th>
                 <th style={{ padding: '16px 8px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Joined Date</th>
                 <th style={{ padding: '16px 8px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Status</th>
@@ -120,6 +121,7 @@ const UserManagement = () => {
                   <td style={{ padding: '16px 8px', fontWeight: 500 }}>{user.name}</td>
                   <td style={{ padding: '16px 8px', color: 'var(--color-text-muted)' }}>{user.mobile}</td>
                   <td style={{ padding: '16px 8px', color: 'var(--color-text-muted)' }}>{user.sponsorId}</td>
+                  <td style={{ padding: '16px 8px', color: 'var(--color-text-muted)' }}>{user.parentNode}</td>
                   <td style={{ padding: '16px 8px' }}>
                     {user.placement === 'Pending' ? (
                       <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>Pending</span>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, ChevronRight, ShieldCheck, FileText, Lock, LogOut, X, Edit2 } from 'lucide-react';
 import './Settings.css';
 
@@ -228,16 +229,18 @@ const Settings = () => {
             </div>
           </div>
           <div className="divider"></div>
-          <div className="settings-item">
-            <div className="settings-item-label">
-              <span className="settings-icon-wrap"><FileText size={16} /></span>
-              <span>KYC Requirements</span>
+          <Link to="/kyc-management" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="settings-item" style={{ cursor: 'pointer' }}>
+              <div className="settings-item-label">
+                <span className="settings-icon-wrap"><FileText size={16} /></span>
+                <span>KYC Management</span>
+              </div>
+              <div className="settings-item-value">
+                <span>View Requests</span>
+                <ChevronRight size={16} className="text-muted" />
+              </div>
             </div>
-            <div className="settings-item-value">
-              <span>Tier 2</span>
-              <ChevronRight size={16} className="text-muted" />
-            </div>
-          </div>
+          </Link>
           <div className="divider"></div>
           <div className="settings-item">
             <div className="settings-item-label">

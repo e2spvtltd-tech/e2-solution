@@ -66,7 +66,15 @@ const getDashboardStats = async (req, res) => {
 
 const getMembers = async (req, res) => {
   try {
-    const [users] = await pool.query("SELECT id, full_name, user_id, status, placement, volume, mobile, sponsor_id, created_at FROM users WHERE role = 'USER' ORDER BY created_at DESC");
+    const [users] = await pool.query(`
+      SELECT 
+        u.id, u.full_name, u.user_id, u.status, u.placement, u.volume, u.mobile, u.sponsor_id, u.created_at,
+        p.full_name as parent_name, p.user_id as parent_user_id
+      FROM users u
+      LEFT JOIN users p ON u.parent_id = p.user_id
+      WHERE u.role = 'USER' 
+      ORDER BY u.created_at DESC
+    `);
     
     res.json(users.map(u => ({
       id: u.user_id,
@@ -77,6 +85,7 @@ const getMembers = async (req, res) => {
       status: u.status === 'ACTIVE' ? 'Active' : u.status,
       mobile: u.mobile,
       sponsorId: u.sponsor_id || 'ADMIN',
+      parentNode: u.parent_name ? `${u.parent_name} (${u.parent_user_id})` : 'Pending/None',
       joined: new Date(u.created_at).toLocaleDateString()
     })));
   } catch (error) {
@@ -260,8 +269,7 @@ const updatePlacement = async (req, res) => {
       [`User ${userToPlace.full_name} (${id}) has been placed on the ${placement} of ${parent.full_name} (${finalParentId}).`]
     );
 
-    // Trigger Binary Matching Bonus evaluation for the upline
-    calculateAndPayBinaryBonus(id);
+    // Note: Binary Matching Bonus evaluation for the upline is deferred to the daily cron cutoff
 
     res.json({ message: 'Placement updated successfully' });
   } catch (error) {
@@ -328,16 +336,30 @@ const deleteUser = async (req, res) => {
 
 const getReports = async (req, res) => {
   try {
+    const { period, date } = req.query; // 'daily', 'weekly', 'monthly'
+    let dateCondition = "";
+
+    // Validate date format YYYY-MM-DD to prevent SQL injection, fallback to CURDATE()
+    const referenceDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? `'${date}'` : 'CURDATE()';
+
+    if (period === 'daily') {
+      dateCondition = `AND DATE(t.created_at) = ${referenceDate}`;
+    } else if (period === 'weekly') {
+      dateCondition = `AND DATE(t.created_at) > DATE_SUB(${referenceDate}, INTERVAL 7 DAY) AND DATE(t.created_at) <= ${referenceDate}`;
+    } else if (period === 'monthly') {
+      dateCondition = `AND YEAR(t.created_at) = YEAR(${referenceDate}) AND MONTH(t.created_at) = MONTH(${referenceDate})`;
+    }
+
     const [reports] = await pool.query(`
       SELECT 
         u.user_id as idNo, 
         u.full_name as name, 
         u.mobile, 
         u.volume as investment,
-        COALESCE(SUM(CASE WHEN t.type = 'binary' AND t.status = 'COMPLETED' THEN t.amount ELSE 0 END), 0) as binaryIncome,
-        COALESCE(SUM(CASE WHEN t.type = 'referral' AND t.status = 'COMPLETED' THEN t.amount ELSE 0 END), 0) as drIncome,
-        COALESCE(SUM(CASE WHEN t.type IN ('roi', 'binary', 'referral') AND t.status = 'COMPLETED' THEN t.amount ELSE 0 END), 0) as totalIncome,
-        COALESCE(SUM(CASE WHEN t.type = 'withdrawal' AND t.status = 'COMPLETED' THEN ABS(t.amount) ELSE 0 END), 0) as payout
+        COALESCE(SUM(CASE WHEN t.type = 'binary' AND t.status = 'COMPLETED' ${dateCondition} THEN t.amount ELSE 0 END), 0) as binaryIncome,
+        COALESCE(SUM(CASE WHEN t.type = 'referral' AND t.status = 'COMPLETED' ${dateCondition} THEN t.amount ELSE 0 END), 0) as drIncome,
+        COALESCE(SUM(CASE WHEN t.type IN ('roi', 'binary', 'referral') AND t.status = 'COMPLETED' ${dateCondition} THEN t.amount ELSE 0 END), 0) as totalIncome,
+        COALESCE(SUM(CASE WHEN t.type = 'withdrawal' AND t.status = 'COMPLETED' ${dateCondition} THEN ABS(t.amount) ELSE 0 END), 0) as payout
       FROM users u
       LEFT JOIN transactions t ON u.id = t.user_id
       WHERE u.role = 'USER'

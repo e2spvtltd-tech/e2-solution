@@ -9,62 +9,70 @@
     <title>Binary MLM Admin</title>
     <script>
       // Workaround for Blackbox Chrome Extension CORS/404 errors
+      // Intercept fetch
       const originalFetch = window.fetch;
       window.fetch = async function(...args) {
         let url = '';
         if (args[0]) {
-          if (typeof args[0] === 'string') {
-            url = args[0];
-          } else if (args[0] instanceof URL) {
-            url = args[0].href;
-          } else if (args[0].url) {
-            url = args[0].url;
-          } else {
-            url = String(args[0]);
-          }
+          if (typeof args[0] === 'string') url = args[0];
+          else if (args[0] instanceof URL) url = args[0].href;
+          else if (args[0].url) url = args[0].url;
+          else url = String(args[0]);
         }
-        if (url && url.includes('useblackbox.io')) {
+        if (url && (url.includes('useblackbox.io') || url.includes('blackbox.io'))) {
           return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
         return originalFetch.apply(this, args);
       };
 
-      // Intercept Request constructor in case they use new Request()
+      // Intercept Request constructor
       const OriginalRequest = window.Request;
       window.Request = function(input, options) {
         let url = '';
         if (input) {
-          if (typeof input === 'string') {
-            url = input;
-          } else if (input instanceof URL) {
-            url = input.href;
-          } else if (input.url) {
-            url = input.url;
-          } else {
-            url = String(input);
-          }
+          if (typeof input === 'string') url = input;
+          else if (input instanceof URL) url = input.href;
+          else if (input.url) url = input.url;
+          else url = String(input);
         }
-        if (url && url.includes('useblackbox.io')) {
-          input = 'about:blank';
+        if (url && (url.includes('useblackbox.io') || url.includes('blackbox.io'))) {
+          input = 'data:application/json,{}';
         }
         return new OriginalRequest(input, options);
       };
 
-      // Suppress the "Uncaught (in promise) TypeError: Failed to fetch" from the extension
+      // Intercept XMLHttpRequest for the extension
+      const OriginalXHR = window.XMLHttpRequest;
+      const origOpen = OriginalXHR.prototype.open;
+      OriginalXHR.prototype.open = function(method, url, ...rest) {
+        const urlStr = String(url || '');
+        if (urlStr.includes('useblackbox.io') || urlStr.includes('blackbox.io')) {
+          this._blockedByBlackboxFix = true;
+          return origOpen.call(this, method, 'data:application/json,{}', ...rest);
+        }
+        return origOpen.call(this, method, url, ...rest);
+      };
+
+      // Suppress unhandled promise rejections from the extension
       window.addEventListener('unhandledrejection', function(event) {
         const reasonStr = event.reason ? String(event.reason) : '';
         const reasonMsg = (event.reason && event.reason.message) ? String(event.reason.message) : '';
         const stack = (event.reason && event.reason.stack) ? String(event.reason.stack) : '';
+        const combined = reasonStr + ' ' + reasonMsg + ' ' + stack;
         
-        if (reasonStr.includes('Failed to fetch') || reasonMsg.includes('Failed to fetch')) {
-          if (stack.includes('index.iife.js') || stack.includes('useblackbox') || reasonStr.includes('useblackbox') || reasonMsg.includes('useblackbox')) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
+        if (combined.includes('useblackbox') || combined.includes('blackbox.io') || combined.includes('index.iife.js')) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        if ((reasonStr.includes('Failed to fetch') || reasonMsg.includes('Failed to fetch')) && stack.includes('index.iife.js')) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
         }
       });
-      
-      // Also intercept console.error for this specific error just in case
+
+      // Suppress console.error from the extension
       const originalConsoleError = console.error;
       console.error = function(...args) {
         const message = args.map(arg => {
@@ -73,10 +81,20 @@
           return String(arg);
         }).join(' ');
 
-        if (message.includes('useblackbox') || message.includes('index.iife.js')) {
+        if (message.includes('useblackbox') || message.includes('blackbox.io') || message.includes('index.iife.js') || message.includes('/tlm')) {
           return;
         }
         return originalConsoleError.apply(console, args);
+      };
+
+      // Suppress console.warn from the extension
+      const originalConsoleWarn = console.warn;
+      console.warn = function(...args) {
+        const message = args.map(arg => String(arg)).join(' ');
+        if (message.includes('useblackbox') || message.includes('blackbox.io') || message.includes('index.iife.js')) {
+          return;
+        }
+        return originalConsoleWarn.apply(console, args);
       };
     </script>
   </head>

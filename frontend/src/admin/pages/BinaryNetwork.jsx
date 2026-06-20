@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Network, Users, Activity, ChevronDown } from 'lucide-react';
+import { Network, Users, Activity, ChevronDown, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import api from '../services/api';
 
 const OrgTreeStyles = () => (
@@ -167,8 +167,6 @@ const BinaryNode = ({ user, isRoot = false, side = null, parentNode = null, onEm
 };
 
 const renderTree = (node, isRoot = true, side = null, level = 0, parentNode = null, onEmptyClick = null, clickedSlot = null) => {
-  if (!node && level > 2) return null; // limit mock depth
-  
   const nodeWithSide = node ? { ...node, side } : null;
   const isOpening = !!(clickedSlot && clickedSlot.parentId === parentNode?.id && clickedSlot.side === side);
 
@@ -184,7 +182,7 @@ const renderTree = (node, isRoot = true, side = null, level = 0, parentNode = nu
           isOpening={isOpening}
         />
       </div>
-      {node && (node.left || node.right || level < 2) && (
+      {node && (
         <ul>
           {renderTree(node.left, false, "Left", level + 1, node, onEmptyClick, clickedSlot)}
           {renderTree(node.right, false, "Right", level + 1, node, onEmptyClick, clickedSlot)}
@@ -214,6 +212,11 @@ const BinaryNetwork = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [clickedSlot, setClickedSlot] = useState(null);
+  const [zoom, setZoom] = useState(1);
+
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 2));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.3));
+  const handleResetZoom = () => setZoom(1);
 
   const handleEmptyNodeClick = (parentId, side) => {
     setClickedSlot({ parentId, side });
@@ -356,12 +359,27 @@ const BinaryNetwork = () => {
         </div>
       </div>
 
-      <div className="card" style={{ padding: '40px 0', overflowX: 'auto', minHeight: '400px', WebkitOverflowScrolling: 'touch' }}>
+      <div className="card" style={{ padding: '40px 0', overflowX: 'auto', minHeight: '600px', WebkitOverflowScrolling: 'touch', position: 'relative' }}>
         <OrgTreeStyles />
-        <div style={{ width: 'max-content', margin: '0 auto', padding: '0 20px' }}>
+        
+        <div style={{ position: 'sticky', left: 0, width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px', zIndex: 50, pointerEvents: 'none' }}>
+          <div style={{ display: 'flex', gap: '8px', backgroundColor: 'var(--color-card)', padding: '6px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', pointerEvents: 'auto' }}>
+            <button onClick={handleZoomOut} style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }} title="Zoom Out">
+              <ZoomOut size={18} />
+            </button>
+            <button onClick={handleResetZoom} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', backgroundColor: 'var(--color-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text)' }} title="Reset Zoom">
+              {Math.round(zoom * 100)}%
+            </button>
+            <button onClick={handleZoomIn} style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }} title="Zoom In">
+              <ZoomIn size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ width: 'max-content', minWidth: '100%', margin: '0 auto', padding: '0 20px', paddingBottom: '120px', zoom: zoom }}>
           <div className="org-tree">
             <ul>
-              {loading ? <div style={{ padding: '40px' }}>Loading tree...</div> : renderTree(treeData, true, null, 0, null, handleEmptyNodeClick, clickedSlot)}
+              {loading ? <div style={{ padding: '40px', textAlign: 'center' }}>Loading tree...</div> : renderTree(treeData, true, null, 0, null, handleEmptyNodeClick, clickedSlot)}
             </ul>
           </div>
         </div>
