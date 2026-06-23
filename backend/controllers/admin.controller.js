@@ -6,18 +6,18 @@ const getDashboardStats = async (req, res) => {
     const [usersResult] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'USER'");
     const [activeUsersResult] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'USER' AND status = 'ACTIVE'");
     const [pendingTxResult] = await pool.query("SELECT COUNT(*) as count FROM transactions WHERE status = 'PENDING'");
-    
+
     // Sum of all deposits
     const [revenueResult] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE type = 'deposit' AND status = 'COMPLETED'");
-    
+
     // Sum of all withdrawals
     const [withdrawalsResult] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE type = 'withdrawal' AND status = 'PENDING'");
-    
+
     // Sum of all incomes (ROI, Binary, Referral)
     const [roiResult] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE type = 'roi' AND status = 'COMPLETED' AND DATE(created_at) = CURDATE()");
     const [binaryResult] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE type = 'binary' AND status = 'COMPLETED' AND DATE(created_at) = CURDATE()");
     const [refResult] = await pool.query("SELECT SUM(amount) as total FROM transactions WHERE type = 'referral' AND status = 'COMPLETED' AND DATE(created_at) = CURDATE()");
-    
+
     const [recentActivity] = await pool.query(
       "SELECT t.id, t.title, t.subtitle as time, t.amount, u.full_name as user_name FROM transactions t LEFT JOIN users u ON t.user_id = u.id ORDER BY t.created_at DESC LIMIT 5"
     );
@@ -75,7 +75,7 @@ const getMembers = async (req, res) => {
       WHERE u.role = 'USER' 
       ORDER BY u.created_at DESC
     `);
-    
+
     res.json(users.map(u => ({
       id: u.user_id,
       name: u.full_name,
@@ -97,15 +97,21 @@ const getMemberById = async (req, res) => {
   try {
     const { id } = req.params;
     const [users] = await pool.query("SELECT * FROM users WHERE user_id = ?", [id]);
-    
+
     if (users.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     const user = users[0];
-    
+
     // Mocking income and wallet since those tables might not be fully fleshed out for this view
     // In a real app we'd join with transactions table
+    const joinedDate = new Date(user.created_at);
+    const currentDate = new Date();
+    const timeDiff = currentDate.getTime() - joinedDate.getTime();
+    const daysPassed = Math.floor(timeDiff / (1000 * 3600 * 24));
+    const daysLeft = Math.max(0, 100 - daysPassed);
+
     const profile = {
       id: user.user_id,
       name: user.full_name,
@@ -120,9 +126,15 @@ const getMemberById = async (req, res) => {
       binaryIncome: 0,
       referralIncome: 0,
       roiIncome: 0,
-      teamCount: 0
+      teamCount: 0,
+      bankName: user.bank_name || '',
+      accountNumber: user.account_number || '',
+      accountHolderName: user.account_holder_name || '',
+      ifscCode: user.ifsc_code || '',
+      bankBranchAddress: user.bank_branch_address || '',
+      daysLeft: daysLeft
     };
-    
+
     res.json(profile);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -326,7 +338,7 @@ const deleteUser = async (req, res) => {
   try {
     const [users] = await pool.query('SELECT id FROM users WHERE user_id = ?', [id]);
     if (users.length === 0) return res.status(404).json({ message: 'User not found' });
-    
+
     await pool.query('DELETE FROM users WHERE user_id = ?', [id]);
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

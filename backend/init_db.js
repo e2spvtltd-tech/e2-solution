@@ -29,6 +29,11 @@ async function initDB() {
         income_wallet DECIMAL(15,2) DEFAULT 0.00,
         bonus_wallet DECIMAL(15,2) DEFAULT 0.00,
         plan_expiry_date DATE NULL,
+        bank_name VARCHAR(150) NULL,
+        account_number VARCHAR(50) NULL,
+        account_holder_name VARCHAR(150) NULL,
+        ifsc_code VARCHAR(50) NULL,
+        bank_branch_address VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);

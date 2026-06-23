@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, Calendar, ShieldCheck, Wallet, Network, Share2, Percent, Users } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Calendar, ShieldCheck, Wallet, Network, Share2, Percent, Users, Landmark } from 'lucide-react';
 import api from '../services/api';
 
 const UserProfile = () => {
@@ -92,9 +92,40 @@ const UserProfile = () => {
               <span className="text-muted">Total Team Count</span>
               <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={14} /> {user.teamCount}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
               <span className="text-muted">Wallet Balance</span>
               <h3 style={{ margin: 0, color: 'var(--color-success)' }}>₹{user.walletBalance.toLocaleString()}</h3>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px' }}>
+              <span className="text-muted">Days Left</span>
+              <span style={{ fontWeight: 600 }}>{user.daysLeft || 0} Days</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bank Account Details Card */}
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><Landmark size={20} className="text-primary" /> Bank Account Details</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
+              <span className="text-muted">Bank Name</span>
+              <span style={{ fontWeight: 600 }}>{user.bankName || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
+              <span className="text-muted">Account Number</span>
+              <span style={{ fontWeight: 600 }}>{user.accountNumber || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
+              <span className="text-muted">Account Holder Name</span>
+              <span style={{ fontWeight: 600 }}>{user.accountHolderName || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
+              <span className="text-muted">IFSC Code</span>
+              <span style={{ fontWeight: 600 }}>{user.ifscCode || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px' }}>
+              <span className="text-muted">Bank Branch Address</span>
+              <span style={{ fontWeight: 600, textAlign: 'right', wordBreak: 'break-word', maxWidth: '60%' }}>{user.bankBranchAddress || 'N/A'}</span>
             </div>
           </div>
         </div>

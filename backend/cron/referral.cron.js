@@ -56,6 +56,9 @@ cron.schedule('59 23 * * *', async () => {
   } catch (error) {
     console.error('Error executing Daily Referral Cutoff Cron Job:', error);
   }
+}, {
+  scheduled: true,
+  timezone: "Asia/Kolkata"
 });
 
 console.log('Daily Referral Cutoff Cron Job initialized.');

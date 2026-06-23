@@ -73,6 +73,9 @@ cron.schedule('59 23 * * *', async () => {
   } catch (error) {
     console.error('Error executing Daily Binary Matching Cutoff Cron Job:', error);
   }
+}, {
+  scheduled: true,
+  timezone: "Asia/Kolkata"
 });
 
 console.log('Daily Binary Matching Cutoff Cron Job initialized.');

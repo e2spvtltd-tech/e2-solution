@@ -46,10 +46,30 @@ function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Profile Form state
+  const [fullNameInput, setFullNameInput] = useState("");
+  const [mobileInput, setMobileInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  
+  // Bank Details state
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [ifscCode, setIfscCode] = useState("");
+  const [bankBranchAddress, setBankBranchAddress] = useState("");
+
   useEffect(() => {
     api.get("/user/profile")
       .then((res) => {
         setProfile(res.data);
+        setFullNameInput(res.data.full_name || "");
+        setMobileInput(res.data.mobile || "");
+        setEmailInput(res.data.email || "");
+        setBankName(res.data.bank_name || "");
+        setAccountNumber(res.data.account_number || "");
+        setAccountHolderName(res.data.account_holder_name || "");
+        setIfscCode(res.data.ifsc_code || "");
+        setBankBranchAddress(res.data.bank_branch_address || "");
         if (res.data.plain_password) {
           setCurrentPassword(res.data.plain_password);
         }
@@ -66,8 +86,22 @@ function ProfilePage() {
     navigate({ to: "/login" });
   };
 
-  const handleSave = (message: string) => {
-    toast.success(message);
+  const handleSave = async () => {
+    try {
+      await api.put("/user/profile", {
+        full_name: fullNameInput,
+        mobile: mobileInput,
+        email: emailInput,
+        bank_name: bankName,
+        account_number: accountNumber,
+        account_holder_name: accountHolderName,
+        ifsc_code: ifscCode,
+        bank_branch_address: bankBranchAddress
+      });
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    }
   };
 
   const handlePasswordChange = async () => {
@@ -134,17 +168,44 @@ function ProfilePage() {
               <div className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Full Name</label>
-                  <input type="text" defaultValue={fullName} className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                  <input type="text" value={fullNameInput} onChange={(e) => setFullNameInput(e.target.value)} className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Mobile Number</label>
-                  <input type="text" defaultValue={profile?.phone || "+91 98765 43210"} className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                  <input type="text" value={mobileInput} onChange={(e) => setMobileInput(e.target.value)} className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email Address</label>
-                  <input type="email" defaultValue={profile?.email || "user@example.com"} className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                  <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
-                <Button className="w-full mt-2" onClick={() => handleSave("Profile updated successfully!")}>Save Changes</Button>
+                <Button className="w-full mt-2" onClick={handleSave}>Save Changes</Button>
+              </div>
+            </section>
+            
+            <section className="rounded-2xl bg-card p-4 md:p-6 shadow-soft h-fit flex flex-col">
+              <h3 className="font-bold text-lg mb-4">Bank Account Details</h3>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bank Name</label>
+                  <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. State Bank of India" className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Account Number</label>
+                  <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Enter Account Number" className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Account Holder Name</label>
+                  <input type="text" value={accountHolderName} onChange={(e) => setAccountHolderName(e.target.value)} placeholder="Enter Account Holder Name" className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">IFSC Code</label>
+                  <input type="text" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} placeholder="Enter IFSC Code" className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bank Branch Address</label>
+                  <input type="text" value={bankBranchAddress} onChange={(e) => setBankBranchAddress(e.target.value)} placeholder="Enter Branch Address" className="w-full rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                </div>
+                <Button className="w-full mt-2" onClick={handleSave}>Save Bank Details</Button>
               </div>
             </section>
             

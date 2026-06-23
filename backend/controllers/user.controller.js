@@ -40,7 +40,14 @@ const getDashboard = async (req, res) => {
       pool.query('SELECT id, title, amount, type as kind, created_at as time FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 5', [userId])
     ]);
 
+    const joinedDate = new Date(user.created_at);
+    const currentDate = new Date();
+    const timeDiff = currentDate.getTime() - joinedDate.getTime();
+    const daysPassed = Math.floor(timeDiff / (1000 * 3600 * 24));
+    const daysLeft = Math.max(0, 100 - daysPassed);
+
     res.json({
+      daysLeft: daysLeft,
       totalEarnings: parseFloat(earnings[0].total || 0),
       walletBalance: parseFloat(user.main_wallet || 0),
       binaryIncome: parseFloat(binary[0].total || 0),
@@ -73,7 +80,7 @@ const getProfile = async (req, res) => {
        return res.json({ full_name: 'Administrator', user_id: 'ADMIN-001', email: 'admin@e2solution.com', role: 'ADMIN', status: 'ACTIVE' });
     }
 
-    const [users] = await pool.query('SELECT full_name, user_id, email, role, status, plain_password FROM users WHERE id = ?', [userId]);
+    const [users] = await pool.query('SELECT full_name, user_id, email, mobile, role, status, plain_password, bank_name, account_number, account_holder_name, ifsc_code, bank_branch_address FROM users WHERE id = ?', [userId]);
     if (users.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -357,4 +364,24 @@ const updatePlacement = async (req, res) => {
   }
 };
 
-module.exports = { getDashboard, getProfile, requestWithdrawal, getReferrals, getNetwork, changePassword, getNotifications, markNotificationsRead, updatePlacement };
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (req.user.role === 'ADMIN') {
+      return res.status(400).json({ message: 'Admin profile cannot be updated here' });
+    }
+
+    const { full_name, mobile, email, bank_name, account_number, account_holder_name, ifsc_code, bank_branch_address } = req.body;
+
+    await pool.query(
+      'UPDATE users SET full_name = ?, mobile = ?, email = ?, bank_name = ?, account_number = ?, account_holder_name = ?, ifsc_code = ?, bank_branch_address = ? WHERE id = ?',
+      [full_name, mobile, email, bank_name, account_number, account_holder_name, ifsc_code, bank_branch_address, userId]
+    );
+
+    res.json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getDashboard, getProfile, updateProfile, requestWithdrawal, getReferrals, getNetwork, changePassword, getNotifications, markNotificationsRead, updatePlacement };

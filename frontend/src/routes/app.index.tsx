@@ -132,7 +132,11 @@ function Dashboard() {
             </div>
           </div>
           <p className="mt-1 text-3xl md:text-5xl font-extrabold tracking-tight">{inr(Number(data.totalEarnings || 0) + Number(data.walletBalance || 0))}</p>
-          <div className="mt-4 md:mt-6 flex items-center justify-between rounded-2xl bg-primary-foreground/10 px-4 md:px-6 py-2.5 md:py-4 text-sm md:text-base">
+          <div className="mt-4 md:mt-6 flex items-center justify-between rounded-2xl bg-primary-foreground/10 px-4 md:px-6 py-2.5 md:py-4 text-sm md:text-base mb-2">
+            <span className="text-primary-foreground/80">Days Left</span>
+            <span className="font-bold">{data.daysLeft || 0} Days</span>
+          </div>
+          <div className="flex items-center justify-between rounded-2xl bg-primary-foreground/10 px-4 md:px-6 py-2.5 md:py-4 text-sm md:text-base">
             <span className="text-primary-foreground/80">Pending Volume</span>
             <span className="font-bold">{inr(0)}</span>
           </div>
